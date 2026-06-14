@@ -75,9 +75,14 @@ export const media = pgTable("media", {
   postId: varchar("post_id").notNull().references(() => posts.id),
   type: varchar("type").notNull(),
   url: text("url").notNull(),
+  publicId: varchar("public_id"),
   thumbnailUrl: text("thumbnail_url"),
   altText: text("alt_text"),
+  width: integer("width"),
+  height: integer("height"),
   duration: integer("duration"),
+  bytes: integer("bytes"),
+  format: varchar("format"),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -120,3 +125,28 @@ export const notifications = pgTable("notifications", {
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  posts: many(posts),
+  comments: many(comments),
+  likes: many(likes),
+  followers: many(follows, { relationName: "following" }),
+  following: many(follows, { relationName: "follower" }),
+}));
+
+export const postsRelations = relations(posts, ({ one, many }) => ({
+  author: one(users, {
+    fields: [posts.authorId],
+    references: [users.id],
+  }),
+  media: many(media),
+  comments: many(comments),
+  likes: many(likes),
+}));
+
+export const mediaRelations = relations(media, ({ one }) => ({
+  post: one(posts, {
+    fields: [media.postId],
+    references: [posts.id],
+  }),
+}));

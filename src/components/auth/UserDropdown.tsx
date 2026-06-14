@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,15 +24,13 @@ interface UserDropdownProps {
 export function UserDropdown({ user }: UserDropdownProps) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user.image ?? ""} alt={user.name ?? "Avatar"} />
-            <AvatarFallback>{user.name?.charAt(0) ?? "U"}</AvatarFallback>
-          </Avatar>
-        </Button>
+      <DropdownMenuTrigger className="relative h-8 w-8 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+        <Avatar className="h-8 w-8">
+          <AvatarImage src={user.image ?? ""} alt={user.name ?? "Avatar"} />
+          <AvatarFallback>{user.name?.charAt(0) ?? "U"}</AvatarFallback>
+        </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent className="w-56" align="end">
         <div className="flex flex-col space-y-1 p-2">
           <p className="text-sm font-medium leading-none">{user.name}</p>
           <p className="text-xs leading-none text-muted-foreground">
@@ -38,11 +38,11 @@ export function UserDropdown({ user }: UserDropdownProps) {
           </p>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a href="/profile">Profile</a>
+        <DropdownMenuItem>
+          <Link href="/profile" className="w-full cursor-pointer">Profile</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <a href="/settings">Settings</a>
+        <DropdownMenuItem>
+          <Link href="/settings" className="w-full cursor-pointer">Settings</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut()}>
