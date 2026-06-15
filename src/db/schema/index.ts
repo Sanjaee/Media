@@ -9,8 +9,11 @@ export const users = pgTable("users", {
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
   bio: text("bio"),
-  location: varchar("location"),
+  role: varchar("role").default("member"),
   isVerified: boolean("is_verified").default(false),
+  isBanned: boolean("is_banned").default(false),
+  bannedUntil: timestamp("banned_until"),
+  banReason: text("ban_reason"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -94,6 +97,7 @@ export const comments = pgTable("comments", {
   parentCommentId: varchar("parent_comment_id"),
   content: text("content").notNull(),
   likeCount: integer("like_count").default(0),
+  replyCount: integer("reply_count").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -149,4 +153,22 @@ export const mediaRelations = relations(media, ({ one }) => ({
     fields: [media.postId],
     references: [posts.id],
   }),
+}));
+
+export const commentsRelations = relations(comments, ({ one, many }) => ({
+  post: one(posts, {
+    fields: [comments.postId],
+    references: [posts.id],
+  }),
+  author: one(users, {
+    fields: [comments.authorId],
+    references: [users.id],
+  }),
+  parentComment: one(comments, {
+    fields: [comments.parentCommentId],
+    references: [comments.id],
+    relationName: "replies"
+  }),
+  replies: many(comments, { relationName: "replies" }),
+  likes: many(likes),
 }));

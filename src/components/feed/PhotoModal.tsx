@@ -7,6 +7,7 @@ import { PostWithRelations } from "@/store/usePostStore";
 import { X, MessageCircle, Repeat2, Heart, BarChart2, Bookmark, Share } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCloudinaryUrl } from "@/lib/utils";
+import { CommentFeed } from "@/components/comment/CommentFeed";
 
 export function PhotoModal({ post, photoId }: { post: PostWithRelations, photoId: string }) {
   const router = useRouter();
@@ -100,6 +101,11 @@ export function PhotoModal({ post, photoId }: { post: PostWithRelations, photoId
                <div className="p-2 rounded-full group-hover:bg-blue-500/10"><BarChart2 size={18} /></div>
              </button>
            </div>
+        </div>
+        
+        {/* Comments Section */}
+        <div className="flex-1 overflow-y-auto">
+          <CommentFeed postId={post.id} />
         </div>
       </div>
     </div>

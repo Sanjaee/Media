@@ -9,11 +9,13 @@ import { getCloudinaryUrl } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { deletePostAction } from "@/actions/post.actions";
 import { useState } from "react";
+import { CommentForm } from "@/components/comment/CommentForm";
 
 export function PostCard({ post }: { post: PostWithRelations }) {
   const { data: session } = useSession();
   const deletePost = usePostStore(state => state.deletePost);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showCommentForm, setShowCommentForm] = useState(false);
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this post?")) return;
@@ -44,7 +46,7 @@ export function PostCard({ post }: { post: PostWithRelations }) {
       )}
 
       {/* Avatar */}
-      <Link href={`/${post.author.username}`} className="shrink-0">
+      <Link href={`/${post.author.username || 'user'}`} className="shrink-0">
         <Avatar className="w-10 h-10">
           <AvatarImage src={post.author.image ?? ""} alt={post.author.name ?? ""} />
           <AvatarFallback>{post.author.name?.charAt(0)}</AvatarFallback>
@@ -55,7 +57,7 @@ export function PostCard({ post }: { post: PostWithRelations }) {
       <div className="flex-1 min-w-0">
         {/* Header */}
         <div className="flex items-center gap-1 text-sm">
-          <Link href={`/${post.author.username}`} className="font-bold hover:underline truncate">
+          <Link href={`/${post.author.username || 'user'}`} className="font-bold hover:underline truncate">
             {post.author.name}
           </Link>
           {post.author.isVerified && (
@@ -63,11 +65,11 @@ export function PostCard({ post }: { post: PostWithRelations }) {
               ✓
             </span>
           )}
-          <Link href={`/${post.author.username}`} className="text-muted-foreground truncate">
+          <Link href={`/${post.author.username || 'user'}`} className="text-muted-foreground truncate">
             @{post.author.username}
           </Link>
           <span className="text-muted-foreground">·</span>
-          <Link href={`/${post.author.username}/status/${post.id}`} className="text-muted-foreground hover:underline whitespace-nowrap">
+          <Link href={`/${post.author.username || 'user'}/status/${post.id}`} className="text-muted-foreground hover:underline whitespace-nowrap">
             {post.createdAt ? new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}
           </Link>
         </div>
@@ -83,7 +85,7 @@ export function PostCard({ post }: { post: PostWithRelations }) {
             {post.media.map((media) => (
               <Link 
                 key={media.id} 
-                href={`/${post.author.username}/status/${post.id}/photo/${media.id}`}
+                href={`/${post.author.username || 'user'}/status/${post.id}/photo/${media.id}`}
                 scroll={false}
               >
                 <div className="relative w-full bg-muted">
@@ -102,7 +104,10 @@ export function PostCard({ post }: { post: PostWithRelations }) {
 
         {/* Actions */}
         <div className="flex justify-between items-center mt-1 text-muted-foreground max-w-md">
-          <button className="flex items-center gap-1 text-[13px] hover:text-blue-500 transition-colors group">
+          <button 
+            onClick={() => setShowCommentForm(!showCommentForm)}
+            className="flex items-center gap-1 text-[13px] hover:text-blue-500 transition-colors group"
+          >
             <div className="p-2 rounded-full group-hover:bg-blue-500/10"><MessageCircle size={18} /></div>
             <span>{post.stats.replies}</span>
           </button>
@@ -123,6 +128,17 @@ export function PostCard({ post }: { post: PostWithRelations }) {
             <button className="p-2 rounded-full hover:bg-blue-500/10 hover:text-blue-500 transition-colors"><Share size={18} /></button>
           </div>
         </div>
+
+        {/* Inline Comment Form */}
+        {showCommentForm && (
+          <div className="mt-2 -mx-4 border-t">
+            <CommentForm 
+              postId={post.id} 
+              onSuccess={() => setShowCommentForm(false)} 
+              autoFocus 
+            />
+          </div>
+        )}
       </div>
     </article>
   );
