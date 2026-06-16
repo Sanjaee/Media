@@ -55,7 +55,7 @@ export function CommentForm({ postId, parentCommentId, onSuccess, autoFocus }: C
   if (!session?.user) return null;
 
   return (
-    <div className="flex gap-3 px-4 py-3 border-b">
+    <div className="flex gap-3 px-4 py-3 ">
       <Avatar className="w-10 h-10 shrink-0">
         <AvatarImage src={session.user.image ?? ""} alt={session.user.name ?? ""} />
         <AvatarFallback>{session.user.name?.charAt(0) || "U"}</AvatarFallback>
@@ -65,7 +65,7 @@ export function CommentForm({ postId, parentCommentId, onSuccess, autoFocus }: C
         <Textarea 
           {...form.register("content")}
           placeholder={parentCommentId ? "Post your reply" : "Post your reply"}
-          className="min-h-[40px] border-none shadow-none focus-visible:ring-0 text-lg resize-none p-0 overflow-hidden"
+          className="min-h-[40px] border-none shadow-none focus-visible:ring-0 text-lg resize-none py-2 bg-transparent overflow-hidden"
           autoFocus={autoFocus}
           onInput={(e) => {
             const target = e.target as HTMLTextAreaElement;

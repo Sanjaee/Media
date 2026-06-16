@@ -70,7 +70,7 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
   const replies = repliesData?.pages.flatMap(page => page.replies) || [];
 
   return (
-    <div className="flex gap-3 px-4 py-3 border-b hover:bg-muted/30 transition-colors relative group">
+    <div className="flex gap-3 px-4 py-3  hover:bg-muted/30 transition-colors relative group">
       <Link href={`/${comment.author.username}`} className="shrink-0">
         <Avatar className="w-10 h-10">
           <AvatarImage src={comment.author.image ?? ""} alt={comment.author.name ?? ""} />

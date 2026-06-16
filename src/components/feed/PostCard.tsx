@@ -22,6 +22,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getCloudinaryUrl } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { deletePostAction } from "@/actions/post.actions";
@@ -201,16 +206,54 @@ export function PostCard({ post }: { post: PostWithRelations }) {
           </button>
         </div>
 
-        {/* Inline Comment Form */}
-        {showCommentForm && (
-          <div className="mt-2 -mx-4 border-t">
-            <CommentForm 
-              postId={post.id} 
-              onSuccess={() => setShowCommentForm(false)} 
-              autoFocus 
-            />
-          </div>
-        )}
+        {/* Reply Modal */}
+        <Dialog open={showCommentForm} onOpenChange={setShowCommentForm} disablePointerDismissal>
+          <DialogContent 
+            className="sm:max-w-[500px] p-0 border-none bg-background shadow-xl rounded-2xl"
+          >
+            <DialogTitle className="sr-only">Reply to Post</DialogTitle>
+            <div className="flex flex-col pt-8 px-4 pb-2">
+              {/* Original Post Snippet */}
+              <div className="flex gap-3 relative mb-2">
+                <div className="flex flex-col items-center gap-2">
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage src={post.author.image ?? ""} alt={post.author.name ?? ""} />
+                    <AvatarFallback>{post.author.name?.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="w-0.5 h-full bg-border grow" />
+                </div>
+                <div className="flex flex-col pb-4 flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-1 text-sm">
+                    <span className="font-bold truncate">{post.author.name}</span>
+                    {post.author.isVerified && (
+                      <span className="text-primary text-[10px] bg-primary/10 rounded-full w-4 h-4 flex items-center justify-center shrink-0">
+                        ✓
+                      </span>
+                    )}
+                    <span className="text-muted-foreground truncate">@{post.author.username}</span>
+                    <span className="text-muted-foreground">·</span>
+                    <span className="text-muted-foreground whitespace-nowrap">
+                      {post.createdAt ? new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}
+                    </span>
+                  </div>
+                  <div className="mt-1 text-[15px] whitespace-pre-wrap break-words">{post.content}</div>
+                  <div className="mt-4 text-[13px] text-muted-foreground">
+                    Replying to <span className="text-blue-500">@{post.author.username}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Reply Form */}
+              <div className="-mx-4 border-none">
+                <CommentForm 
+                  postId={post.id} 
+                  onSuccess={() => setShowCommentForm(false)} 
+                  autoFocus 
+                />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
