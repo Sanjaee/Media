@@ -1,8 +1,9 @@
 "use client"
 
+import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 
-export default function ExplorePage() {
+function ExploreContent() {
   const searchParams = useSearchParams()
   const query = searchParams.get("q") || ""
 
@@ -50,5 +51,13 @@ export default function ExplorePage() {
         )}
       </div>
     </main>
+  )
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center">Loading...</div>}>
+      <ExploreContent />
+    </Suspense>
   )
 }
