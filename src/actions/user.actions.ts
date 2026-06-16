@@ -20,6 +20,12 @@ export async function getUserProfileByUsername(username: string) {
   const totalComments = Number(commentsResult[0]?.count || 0);
 
   // We don't have "reputation", so we use "total posts" or similar for now.
+  // Fetch recent posts
+  const recentPosts = await db.query.posts.findMany({
+    where: eq(posts.authorId, user.id),
+    orderBy: (posts, { desc }) => [desc(posts.createdAt)],
+    limit: 3,
+  });
   
   return {
     id: user.id,
@@ -29,11 +35,18 @@ export async function getUserProfileByUsername(username: string) {
     bio: user.bio,
     role: user.role,
     isVerified: user.isVerified,
+    isBanned: user.isBanned,
+    banReason: user.banReason,
     createdAt: user.createdAt,
     stats: {
       totalThreads: totalPosts, // map posts to threads
       totalPosts: totalComments, // map comments to posts (forum style)
       reputation: 0, // Mock
-    }
+    },
+    recentPosts: recentPosts.map(p => ({
+      id: p.id,
+      content: p.content,
+      createdAt: p.createdAt,
+    }))
   };
 }

@@ -171,6 +171,7 @@ export function PostCard({ post }: { post: PostWithRelations }) {
                       src={getCloudinaryUrl(media.url, "f_auto,q_auto,w_800,c_limit")} 
                       alt="Post media" 
                       fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       className="object-cover"
                     />
                   )}
