@@ -15,6 +15,10 @@ export function SidebarLayout({ navbar, leftSidebar, rightSidebar, children }: S
   // Show sidebars and navbar only on these main app routes
   const showSidebars = ["/", "/explore", "/notifications", "/messages", "/settings"].includes(pathname);
 
+  if (pathname === "/premium") {
+    return <>{children}</>;
+  }
+
   if (!showSidebars) {
     // For profile pages (or any other full-width pages), hide the sidebars but KEEP the navbar
     return (

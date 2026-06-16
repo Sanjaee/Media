@@ -213,6 +213,7 @@ body {
   -webkit-font-smoothing: antialiased;
   display: inline-block;
   font-size: 14px;
+  margin-right: 2px;
 }
 
 .god_name {
@@ -232,6 +233,7 @@ body {
   -webkit-font-smoothing: antialiased;
   display: inline-block;
   font-size: 14px;
+  margin-right: 2px;
 }
 
 .vip_name {
@@ -250,6 +252,7 @@ body {
   -webkit-font-smoothing: antialiased;
   display: inline-block;
   font-size: 14px;
+  margin-right: 2px;
 }
 
 .member_name {
