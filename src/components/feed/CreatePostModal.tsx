@@ -14,12 +14,18 @@ export function CreatePostModal() {
   if (!session?.user) return null;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="rounded-full shrink-0 font-bold px-4 gap-1.5">
-          <Plus size={18} />
-          Post
-        </Button>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      // Hanya izinkan aksi membuka dialog dari trigger. 
+      // Untuk menutup, hanya bisa melalui tombol X atau fungsi onSuccess.
+      if (isOpen) {
+        setOpen(true);
+      }
+    }}>
+      <DialogTrigger 
+        render={<Button className="rounded-full shrink-0 font-bold px-4 gap-1.5" />}
+      >
+        <Plus size={18} />
+        Post
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden bg-background border-border" showCloseButton={false}>
         <DialogTitle className="sr-only">Create Post</DialogTitle>

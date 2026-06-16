@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Heart, Trash2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatShortTime } from "@/utils/timeUtils";
 import { useSession } from "next-auth/react";
 import { useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { deleteCommentAction, getRepliesAction } from "@/actions/comment.actions";
@@ -74,13 +74,13 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
       
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1 text-sm">
-          <Link href={`/${comment.author.username}`} className="truncate">
+          <Link href={`/${comment.author.username}`} className="min-w-0 max-w-[150px] sm:max-w-[200px]">
             <UserNameWithRole displayName={comment.author.name || ""} role={comment.author.role} className="mb-0 text-sm" />
           </Link>
           <span className="text-muted-foreground truncate">@{comment.author.username}</span>
           <span className="text-muted-foreground">·</span>
           <span className="text-muted-foreground">
-            {comment.createdAt ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true }) : ""}
+            {comment.createdAt ? formatShortTime(comment.createdAt) : ""}
           </span>
         </div>
 
