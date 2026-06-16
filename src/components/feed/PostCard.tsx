@@ -82,21 +82,33 @@ export function PostCard({ post }: { post: PostWithRelations }) {
 
         {/* Media */}
         {post.media && post.media.length > 0 && (
-          <div className="mt-3 rounded-2xl overflow-hidden border">
+          <div className={`mt-3 rounded-2xl overflow-hidden border bg-muted ${
+            post.media.length === 1 ? 'flex flex-col' : 'grid grid-cols-2 gap-0.5'
+          }`}>
             {post.media.map((media) => (
               <Link 
                 key={media.id} 
                 href={`/${post.author.username || 'user'}/status/${post.id}/photo/${media.id}`}
                 scroll={false}
+                className="block relative"
               >
-                <div className="relative w-full bg-muted">
-                  <Image 
-                    src={getCloudinaryUrl(media.url, "f_auto,q_auto,w_1200,c_limit")} 
-                    alt="Post media" 
-                    width={media.width || 1200}
-                    height={media.height || 800}
-                    className="w-full h-auto object-cover"
-                  />
+                <div className={`relative w-full ${post.media.length > 1 ? 'aspect-square sm:aspect-[4/3]' : ''}`}>
+                  {post.media.length === 1 ? (
+                    <Image 
+                      src={getCloudinaryUrl(media.url, "f_auto,q_auto,w_1200,c_limit")} 
+                      alt="Post media" 
+                      width={media.width || 1200}
+                      height={media.height || 800}
+                      className="w-full h-auto object-cover max-h-[80vh]"
+                    />
+                  ) : (
+                    <Image 
+                      src={getCloudinaryUrl(media.url, "f_auto,q_auto,w_800,c_limit")} 
+                      alt="Post media" 
+                      fill
+                      className="object-cover"
+                    />
+                  )}
                 </div>
               </Link>
             ))}

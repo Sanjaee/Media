@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { PostWithRelations } from "@/store/usePostStore";
-import { X, MessageCircle, Repeat2, Heart, BarChart2, Bookmark, Share } from "lucide-react";
+import { X, MessageCircle, Repeat2, Heart, BarChart2, Bookmark, Share, ChevronLeft, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCloudinaryUrl } from "@/lib/utils";
 import { CommentFeed } from "@/components/comment/CommentFeed";
@@ -27,6 +27,26 @@ export function PhotoModal({ post, photoId }: { post: PostWithRelations, photoId
     }
   };
 
+  const currentIndex = post.media?.findIndex(m => m.id === photoId) ?? -1;
+  const hasPrevious = currentIndex > 0;
+  const hasNext = currentIndex !== -1 && post.media && currentIndex < post.media.length - 1;
+
+  const handlePrevious = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (hasPrevious) {
+      const prevId = post.media![currentIndex - 1].id;
+      router.replace(`/${post.author.username || 'user'}/status/${post.id}/photo/${prevId}`, { scroll: false });
+    }
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (hasNext) {
+      const nextId = post.media![currentIndex + 1].id;
+      router.replace(`/${post.author.username || 'user'}/status/${post.id}/photo/${nextId}`, { scroll: false });
+    }
+  };
+
   const photoUrl = post.media?.find(m => m.id === photoId)?.url;
 
   if (!photoUrl) return null;
@@ -46,8 +66,18 @@ export function PhotoModal({ post, photoId }: { post: PostWithRelations, photoId
       </button>
 
       {/* Left side: Photo */}
-      <div className="flex-1 relative flex items-center justify-center p-4 lg:p-12 pointer-events-none">
-        <div className="relative w-full h-full max-h-screen pointer-events-auto">
+      <div className="flex-1 relative flex items-center justify-center p-4 lg:p-12 pointer-events-none group">
+        
+        {hasPrevious && (
+          <button 
+            onClick={handlePrevious}
+            className="absolute left-4 lg:left-8 z-50 p-3 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors pointer-events-auto opacity-0 group-hover:opacity-100"
+          >
+            <ChevronLeft size={24} />
+          </button>
+        )}
+
+        <div className="relative w-full h-full max-h-screen pointer-events-auto flex items-center justify-center">
           <Image 
             src={getCloudinaryUrl(photoUrl, "f_auto,q_auto,w_1920,c_limit")} 
             alt="Post image" 
@@ -56,6 +86,15 @@ export function PhotoModal({ post, photoId }: { post: PostWithRelations, photoId
             priority
           />
         </div>
+
+        {hasNext && (
+          <button 
+            onClick={handleNext}
+            className="absolute right-4 lg:right-8 z-50 p-3 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors pointer-events-auto opacity-0 group-hover:opacity-100"
+          >
+            <ChevronRight size={24} />
+          </button>
+        )}
       </div>
 
       {/* Right side: Sidebar (Post details) */}
