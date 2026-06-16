@@ -6,6 +6,7 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { LeftSidebar } from "@/components/layout/LeftSidebar";
 import { RightSidebar } from "@/components/layout/RightSidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,6 +47,7 @@ export default function RootLayout({
               <RightSidebar />
             </div>
             {modal}
+            <Toaster />
           </QueryProvider>
         </SessionProvider>
       </body>

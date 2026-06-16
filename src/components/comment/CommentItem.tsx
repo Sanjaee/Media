@@ -4,7 +4,18 @@ import { useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Heart, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { formatShortTime } from "@/utils/timeUtils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useSession } from "next-auth/react";
 import { useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { deleteCommentAction, getRepliesAction } from "@/actions/comment.actions";
@@ -21,10 +32,11 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
   const queryClient = useQueryClient();
   const [isReplying, setIsReplying] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
   const isOwner = session?.user?.id === comment.author.id;
 
-  const deleteMutation = useMutation({
+  const { mutate: deleteComment, isPending: isDeleting } = useMutation({
     mutationFn: deleteCommentAction,
     onSuccess: () => {
       if (comment.parentCommentId) {
@@ -35,7 +47,7 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
     },
     onError: (e) => {
       console.error(e);
-      alert("Failed to delete comment");
+      toast.error("Failed to delete comment");
     }
   });
 
@@ -54,12 +66,6 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: showReplies,
   });
-
-  const handleDelete = () => {
-    if (confirm("Delete this comment?")) {
-      deleteMutation.mutate(comment.id);
-    }
-  };
 
   const replies = repliesData?.pages.flatMap(page => page.replies) || [];
 
@@ -153,13 +159,38 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
 
       {isOwner && (
         <button 
-          onClick={handleDelete}
-          disabled={deleteMutation.isPending}
+          onClick={() => setShowDeleteAlert(true)}
+          disabled={isDeleting}
           className="absolute top-3 right-4 p-2 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-red-500 rounded-full hover:bg-red-500/10 transition-all"
         >
           <Trash2 size={16} />
         </button>
       )}
+
+      <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your comment.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                deleteComment(comment.id);
+                setShowDeleteAlert(false);
+              }}
+              className="bg-red-500 hover:bg-red-600 focus:ring-red-500"
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

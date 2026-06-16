@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Image as ImageIcon, X, Loader2 } from "lucide-react";
 import { createPostAction } from "@/actions/post.actions";
 import { usePostStore } from "@/store/usePostStore";
@@ -92,7 +93,7 @@ export function CreatePost({ onSuccess }: { onSuccess?: () => void }) {
       if (onSuccess) onSuccess();
     } catch (e) {
       console.error("Error creating post:", e);
-      alert("Failed to create post. Pastikan ukuran file tidak terlalu besar.");
+      toast.error("Failed to create post. Pastikan ukuran file tidak terlalu besar.");
     } finally {
       setIsSubmitting(false);
     }

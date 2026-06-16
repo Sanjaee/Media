@@ -3,30 +3,48 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Repeat2, Heart, BarChart2, Bookmark, Share, Trash2 } from "lucide-react";
+import { MessageCircle, Repeat2, Heart, BarChart2, Bookmark, Share, Trash2, MoreHorizontal, Edit, UserPlus, Ban, Flag } from "lucide-react";
 import { PostWithRelations, usePostStore } from "@/store/usePostStore";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { getCloudinaryUrl } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { deletePostAction } from "@/actions/post.actions";
 import { useState } from "react";
 import { CommentForm } from "@/components/comment/CommentForm";
 import { UserNameWithRole } from "@/components/ui/UserNameWithRole";
+import { toast } from "sonner";
 
 export function PostCard({ post }: { post: PostWithRelations }) {
   const { data: session } = useSession();
   const deletePost = usePostStore(state => state.deletePost);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCommentForm, setShowCommentForm] = useState(false);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this post?")) return;
     setIsDeleting(true);
     try {
       await deletePostAction(post.id);
       deletePost(post.id);
     } catch (e) {
       console.error(e);
-      alert("Failed to delete post");
+      toast.error("Failed to delete post");
       setIsDeleting(false);
     }
   };
@@ -35,16 +53,53 @@ export function PostCard({ post }: { post: PostWithRelations }) {
 
   return (
     <article className="border-b px-4 py-3 hover:bg-muted/30 transition-colors flex gap-3 relative">
-      {/* Delete button */}
-      {isOwner && (
-        <button 
-          onClick={handleDelete} 
-          disabled={isDeleting}
-          className="absolute top-3 right-4 p-2 text-muted-foreground hover:text-red-500 rounded-full hover:bg-red-500/10 transition-colors"
-        >
-          <Trash2 size={16} />
-        </button>
-      )}
+      {/* Options Dropdown */}
+      <div className="absolute top-3 right-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger render={
+            <button className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors" />
+          }>
+            <MoreHorizontal size={18} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {isOwner ? (
+              <>
+                <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => toast.info("Fitur edit akan segera hadir!")}>
+                  <Edit size={16} />
+                  <span>Edit</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10 gap-2" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowDeleteAlert(true);
+                  }} 
+                  disabled={isDeleting}
+                >
+                  <Trash2 size={16} />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => toast.info("Fitur Add Friend akan segera hadir!")}>
+                  <UserPlus size={16} />
+                  <span>Add Friend</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer text-yellow-600 focus:text-yellow-600 focus:bg-yellow-500/10 gap-2" onClick={() => toast.info("Fitur Block akan segera hadir!")}>
+                  <Ban size={16} />
+                  <span>Block @{post.author.username}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10 gap-2" onClick={() => toast.info("Fitur Report akan segera hadir!")}>
+                  <Flag size={16} />
+                  <span>Report</span>
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* Avatar */}
       <Link href={`/${post.author.username || 'user'}`} className="shrink-0">
@@ -153,6 +208,31 @@ export function PostCard({ post }: { post: PostWithRelations }) {
           </div>
         )}
       </div>
+
+      <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your post.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+                setShowDeleteAlert(false);
+              }}
+              className="bg-red-500 hover:bg-red-600 focus:ring-red-500"
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete Post"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </article>
   );
 }

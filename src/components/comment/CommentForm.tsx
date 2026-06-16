@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createCommentSchema, CreateCommentInput } from "@/lib/validations/comment";
 import { createCommentAction } from "@/actions/comment.actions";
+import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,7 +44,7 @@ export function CommentForm({ postId, parentCommentId, onSuccess, autoFocus }: C
     },
     onError: (error) => {
       console.error("Failed to post comment:", error);
-      alert("Failed to post comment");
+      toast.error("Failed to post comment");
     }
   });
 
