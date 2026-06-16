@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Repeat2, Heart, BarChart2, Bookmark, Share, Trash2, MoreHorizontal, Edit, UserPlus, Ban, Flag } from "lucide-react";
+import { MessageCircle, Bookmark, Share, Trash2, MoreHorizontal, Edit, UserPlus, Ban, Flag, ThumbsUp } from "lucide-react";
 import { PostWithRelations, usePostStore } from "@/store/usePostStore";
 import {
   DropdownMenu,
@@ -52,86 +52,91 @@ export function PostCard({ post }: { post: PostWithRelations }) {
   const isOwner = session?.user?.id === post.author.id;
 
   return (
-    <article className="border-b px-4 py-3 hover:bg-muted/30 transition-colors flex gap-3 relative">
-      {/* Options Dropdown */}
-      <div className="absolute top-3 right-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger render={
-            <button className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors" />
-          }>
-            <MoreHorizontal size={18} />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            {isOwner ? (
-              <>
-                <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => toast.info("Fitur edit akan segera hadir!")}>
-                  <Edit size={16} />
-                  <span>Edit</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10 gap-2" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setShowDeleteAlert(true);
-                  }} 
-                  disabled={isDeleting}
-                >
-                  <Trash2 size={16} />
-                  <span>Delete</span>
-                </DropdownMenuItem>
-              </>
-            ) : (
-              <>
-                <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => toast.info("Fitur Add Friend akan segera hadir!")}>
-                  <UserPlus size={16} />
-                  <span>Add Friend</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer text-yellow-600 focus:text-yellow-600 focus:bg-yellow-500/10 gap-2" onClick={() => toast.info("Fitur Block akan segera hadir!")}>
-                  <Ban size={16} />
-                  <span>Block @{post.author.username}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10 gap-2" onClick={() => toast.info("Fitur Report akan segera hadir!")}>
-                  <Flag size={16} />
-                  <span>Report</span>
-                </DropdownMenuItem>
-              </>
+    <article className="border-b px-4 py-3 hover:bg-muted/30 transition-colors flex flex-col relative">
+      {/* Header Row */}
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex gap-2 text-sm">
+          {/* Avatar */}
+          <Link href={`/${post.author.username || 'user'}`} className="shrink-0">
+            <Avatar className="w-10 h-10">
+              <AvatarImage src={post.author.image ?? ""} alt={post.author.name ?? ""} />
+              <AvatarFallback>{post.author.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
+          </Link>
+
+          {/* Name & Meta */}
+          <div className="flex flex-wrap items-center gap-1">
+            <Link href={`/${post.author.username || 'user'}`} className="truncate">
+              <UserNameWithRole displayName={post.author.name || ""} role={post.author.role} className="mb-0 text-sm" />
+            </Link>
+            {post.author.isVerified && (
+              <span className="text-primary text-[10px] bg-primary/10 rounded-full w-4 h-4 flex items-center justify-center">
+                ✓
+              </span>
             )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Avatar */}
-      <Link href={`/${post.author.username || 'user'}`} className="shrink-0">
-        <Avatar className="w-10 h-10">
-          <AvatarImage src={post.author.image ?? ""} alt={post.author.name ?? ""} />
-          <AvatarFallback>{post.author.name?.charAt(0)}</AvatarFallback>
-        </Avatar>
-      </Link>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        {/* Header */}
-        <div className="flex items-center gap-1 text-sm">
-          <Link href={`/${post.author.username || 'user'}`} className="truncate">
-            <UserNameWithRole displayName={post.author.name || ""} role={post.author.role} className="mb-0 text-sm" />
-          </Link>
-          {post.author.isVerified && (
-            <span className="text-primary text-[10px] bg-primary/10 rounded-full w-4 h-4 flex items-center justify-center">
-              ✓
-            </span>
-          )}
-          <Link href={`/${post.author.username || 'user'}`} className="text-muted-foreground truncate">
-            @{post.author.username}
-          </Link>
-          <span className="text-muted-foreground">·</span>
-          <Link href={`/${post.author.username || 'user'}/status/${post.id}`} className="text-muted-foreground hover:underline whitespace-nowrap">
-            {post.createdAt ? new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}
-          </Link>
+            <Link href={`/${post.author.username || 'user'}`} className="text-muted-foreground truncate">
+              @{post.author.username}
+            </Link>
+            <span className="text-muted-foreground">·</span>
+            <Link href={`/${post.author.username || 'user'}/status/${post.id}`} className="text-muted-foreground hover:underline whitespace-nowrap">
+              {post.createdAt ? new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}
+            </Link>
+          </div>
         </div>
 
+        {/* Options Dropdown */}
+        <div className="-mt-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger render={
+              <button className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors" />
+            }>
+              <MoreHorizontal size={18} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {isOwner ? (
+                <>
+                  <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => toast.info("Fitur edit akan segera hadir!")}>
+                    <Edit size={16} />
+                    <span>Edit</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10 gap-2" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowDeleteAlert(true);
+                    }} 
+                    disabled={isDeleting}
+                  >
+                    <Trash2 size={16} />
+                    <span>Delete</span>
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => toast.info("Fitur Add Friend akan segera hadir!")}>
+                    <UserPlus size={16} />
+                    <span>Add Friend</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="cursor-pointer text-yellow-600 focus:text-yellow-600 focus:bg-yellow-500/10 gap-2" onClick={() => toast.info("Fitur Block akan segera hadir!")}>
+                    <Ban size={16} />
+                    <span>Block @{post.author.username}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10 gap-2" onClick={() => toast.info("Fitur Report akan segera hadir!")}>
+                    <Flag size={16} />
+                    <span>Report</span>
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Content wrapper */}
+      <div className="flex flex-col min-w-0">
         {/* Body Text */}
-        <div className="mt-1 text-[15px] whitespace-pre-wrap break-words pr-8">
+        <div className="text-[15px] whitespace-pre-wrap break-words mb-1">
           {post.content}
         </div>
 
@@ -171,30 +176,29 @@ export function PostCard({ post }: { post: PostWithRelations }) {
         )}
 
         {/* Actions */}
-        <div className="flex justify-between items-center mt-1 text-muted-foreground max-w-md">
+        <div className="flex justify-between items-center mt-3 text-muted-foreground">
+          <button className="flex-1 flex justify-center items-center gap-2 py-1.5 hover:bg-muted/50 rounded-md transition-colors text-[13px] font-medium">
+            <ThumbsUp size={18} />
+            <span>Like</span>
+          </button>
+          
           <button 
             onClick={() => setShowCommentForm(!showCommentForm)}
-            className="flex items-center gap-1 text-[13px] hover:text-blue-500 transition-colors group"
+            className="flex-1 flex justify-center items-center gap-2 py-1.5 hover:bg-muted/50 rounded-md transition-colors text-[13px] font-medium"
           >
-            <div className="p-2 rounded-full group-hover:bg-blue-500/10"><MessageCircle size={18} /></div>
-            <span>{post.stats.replies}</span>
+            <MessageCircle size={18} />
+            <span>Comment</span>
           </button>
-          <button className="flex items-center gap-1 text-[13px] hover:text-green-500 transition-colors group">
-            <div className="p-2 rounded-full group-hover:bg-green-500/10"><Repeat2 size={18} /></div>
-            <span>{post.stats.reposts}</span>
+
+          <button className="flex-1 flex justify-center items-center gap-2 py-1.5 hover:bg-muted/50 rounded-md transition-colors text-[13px] font-medium">
+            <Bookmark size={18} />
+            <span>Bookmark</span>
           </button>
-          <button className="flex items-center gap-1 text-[13px] hover:text-pink-500 transition-colors group">
-            <div className="p-2 rounded-full group-hover:bg-pink-500/10"><Heart size={18} /></div>
-            <span>{post.stats.likes > 1000 ? `${(post.stats.likes / 1000).toFixed(1)}K` : post.stats.likes}</span>
+
+          <button className="flex-1 flex justify-center items-center gap-2 py-1.5 hover:bg-muted/50 rounded-md transition-colors text-[13px] font-medium">
+            <Share size={18} />
+            <span>Share</span>
           </button>
-          <button className="flex items-center gap-1 text-[13px] hover:text-blue-500 transition-colors group">
-            <div className="p-2 rounded-full group-hover:bg-blue-500/10"><BarChart2 size={18} /></div>
-            <span>{post.stats.views > 1000 ? `${(post.stats.views / 1000).toFixed(1)}K` : post.stats.views}</span>
-          </button>
-          <div className="flex items-center gap-0">
-            <button className="p-2 rounded-full hover:bg-blue-500/10 hover:text-blue-500 transition-colors"><Bookmark size={18} /></button>
-            <button className="p-2 rounded-full hover:bg-blue-500/10 hover:text-blue-500 transition-colors"><Share size={18} /></button>
-          </div>
         </div>
 
         {/* Inline Comment Form */}
