@@ -70,21 +70,23 @@ export function PostCard({ post }: { post: PostWithRelations }) {
           </Link>
 
           {/* Name & Meta */}
-          <div className="flex flex-wrap items-center gap-1">
-            <Link href={`/${post.author.username || 'user'}`} className="truncate">
-              <UserNameWithRole displayName={post.author.name || ""} role={post.author.role} className="mb-0 text-sm" />
-            </Link>
-            {post.author.isVerified && (
-              <span className="text-primary text-[10px] bg-primary/10 rounded-full w-4 h-4 flex items-center justify-center">
-                ✓
-              </span>
-            )}
-            <Link href={`/${post.author.username || 'user'}`} className="text-muted-foreground truncate">
+          <div className="flex flex-col">
+            <div className="flex flex-wrap items-center gap-1">
+              <Link href={`/${post.author.username || 'user'}`} className="truncate">
+                <UserNameWithRole displayName={post.author.name || ""} role={post.author.role} className="mb-0 text-sm" />
+              </Link>
+              {post.author.isVerified && (
+                <span className="text-primary text-[10px] bg-primary/10 rounded-full w-4 h-4 flex items-center justify-center">
+                  ✓
+                </span>
+              )}
+              <span className="text-muted-foreground">·</span>
+              <Link href={`/${post.author.username || 'user'}/status/${post.id}`} className="text-muted-foreground hover:underline whitespace-nowrap text-xs">
+                {post.createdAt ? new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}
+              </Link>
+            </div>
+            <Link href={`/${post.author.username || 'user'}`} className="text-muted-foreground truncate text-sm">
               @{post.author.username}
-            </Link>
-            <span className="text-muted-foreground">·</span>
-            <Link href={`/${post.author.username || 'user'}/status/${post.id}`} className="text-muted-foreground hover:underline whitespace-nowrap">
-              {post.createdAt ? new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}
             </Link>
           </div>
         </div>
@@ -224,18 +226,20 @@ export function PostCard({ post }: { post: PostWithRelations }) {
                   <div className="w-0.5 h-full bg-border grow" />
                 </div>
                 <div className="flex flex-col pb-4 flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-1 text-sm">
-                    <span className="font-bold truncate">{post.author.name}</span>
-                    {post.author.isVerified && (
-                      <span className="text-primary text-[10px] bg-primary/10 rounded-full w-4 h-4 flex items-center justify-center shrink-0">
-                        ✓
+                  <div className="flex flex-col">
+                    <div className="flex flex-wrap items-center gap-1 text-sm">
+                      <UserNameWithRole displayName={post.author.name || ""} role={post.author.role} className="font-bold truncate" />
+                      {post.author.isVerified && (
+                        <span className="text-primary text-[10px] bg-primary/10 rounded-full w-4 h-4 flex items-center justify-center shrink-0">
+                          ✓
+                        </span>
+                      )}
+                      <span className="text-muted-foreground">·</span>
+                      <span className="text-muted-foreground whitespace-nowrap text-xs">
+                        {post.createdAt ? new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}
                       </span>
-                    )}
-                    <span className="text-muted-foreground truncate">@{post.author.username}</span>
-                    <span className="text-muted-foreground">·</span>
-                    <span className="text-muted-foreground whitespace-nowrap">
-                      {post.createdAt ? new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}
-                    </span>
+                    </div>
+                    <span className="text-muted-foreground truncate text-sm">@{post.author.username}</span>
                   </div>
                   <div className="mt-1 text-[15px] whitespace-pre-wrap break-words">{post.content}</div>
                   <div className="mt-4 text-[13px] text-muted-foreground">

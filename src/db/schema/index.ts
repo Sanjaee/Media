@@ -130,12 +130,26 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const transactions = pgTable("transactions", {
+  id: varchar("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  role: varchar("role").notNull(),
+  amount: integer("amount").notNull(),
+  status: varchar("status").default("pending"),
+  plisioOrderId: varchar("plisio_order_id"),
+  plisioTxnId: varchar("plisio_txn_id"),
+  paymentMethod: varchar("payment_method").default("crypto"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
   comments: many(comments),
   likes: many(likes),
   followers: many(follows, { relationName: "following" }),
   following: many(follows, { relationName: "follower" }),
+  transactions: many(transactions),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
@@ -171,4 +185,11 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
   }),
   replies: many(comments, { relationName: "replies" }),
   likes: many(likes),
+}));
+
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  user: one(users, {
+    fields: [transactions.userId],
+    references: [users.id],
+  }),
 }));

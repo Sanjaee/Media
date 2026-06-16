@@ -79,15 +79,19 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
       </Link>
       
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1 text-sm">
-          <Link href={`/${comment.author.username}`} className="min-w-0 max-w-[150px] sm:max-w-[200px]">
-            <UserNameWithRole displayName={comment.author.name || ""} role={comment.author.role} className="mb-0 text-sm" />
+        <div className="flex flex-col">
+          <div className="flex items-center gap-1 text-sm">
+            <Link href={`/${comment.author.username}`} className="min-w-0 max-w-[150px] sm:max-w-[200px]">
+              <UserNameWithRole displayName={comment.author.name || ""} role={comment.author.role} className="mb-0 text-sm" />
+            </Link>
+            <span className="text-muted-foreground">·</span>
+            <span className="text-muted-foreground text-xs">
+              {comment.createdAt ? formatShortTime(comment.createdAt) : ""}
+            </span>
+          </div>
+          <Link href={`/${comment.author.username}`} className="text-muted-foreground truncate text-[13px]">
+            @{comment.author.username}
           </Link>
-          <span className="text-muted-foreground truncate">@{comment.author.username}</span>
-          <span className="text-muted-foreground">·</span>
-          <span className="text-muted-foreground">
-            {comment.createdAt ? formatShortTime(comment.createdAt) : ""}
-          </span>
         </div>
 
         <div className="mt-1 text-[15px] whitespace-pre-wrap break-words pr-8">

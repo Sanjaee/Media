@@ -2,33 +2,36 @@
 
 import { useState } from "react";
 import { UserNameWithRole } from "@/components/ui/UserNameWithRole";
-import { Check, Sparkles, Shield, Star, Crown, Zap } from "lucide-react";
+import { Check, Sparkles, Shield, Star, Crown, Zap, X, Loader2 } from "lucide-react";
+import axios from "axios";
+import { toast } from "sonner";
+import Image from "next/image";
 
 const TIERS = [
   { 
     role: "vip", 
-    price: "IDR 50,000", 
+    price: "$10", 
     name: "VIP Member", 
     icon: <Star className="w-5 h-5 text-blue-400" />,
     features: ["Verified checkmark", "Basic analytics", "Custom profile colors"] 
   },
   { 
     role: "mvp", 
-    price: "IDR 150,000", 
+    price: "$30", 
     name: "MVP", 
     icon: <Zap className="w-5 h-5 text-yellow-400" />,
     features: ["Everything in VIP", "Profile Badge", "Increased upload limits"] 
   },
   { 
     role: "mod", 
-    price: "IDR 250,000", 
+    price: "$50", 
     name: "Moderator", 
     icon: <Shield className="w-5 h-5 text-green-400" />,
     features: ["Everything in MVP", "Mod Tools access", "Content management"] 
   },
   { 
     role: "god", 
-    price: "IDR 1,000,000", 
+    price: "$100", 
     name: "God", 
     icon: <Sparkles className="w-5 h-5 text-purple-400" />,
     features: ["Everything in Mod", "God Mode privileges", "Bypass all limits"] 
@@ -37,6 +40,47 @@ const TIERS = [
 
 export function PremiumCards({ userName }: { userName: string }) {
   const [selected, setSelected] = useState<string>("vip");
+  const [isLoading, setIsLoading] = useState(false);
+  const [currencies, setCurrencies] = useState<any[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedRoleForPayment, setSelectedRoleForPayment] = useState<string>("");
+
+  const handleSubscribeClick = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axios.get("/api/payment/plisio/currencies");
+      if (res.data.success) {
+        setCurrencies(res.data.data);
+        setSelectedRoleForPayment(selected);
+        setShowModal(true);
+      } else {
+        toast.error(res.data.error || "Failed to load currencies");
+      }
+    } catch (error: any) {
+      toast.error("Error loading crypto options");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCurrencySelect = async (currency: string) => {
+    setIsLoading(true);
+    try {
+      const res = await axios.post("/api/payment/plisio/create", {
+        role: selectedRoleForPayment,
+        currency
+      });
+      if (res.data.success && res.data.data.hostedUrl) {
+        window.location.href = res.data.data.hostedUrl;
+      } else {
+        toast.error(res.data.error || "Failed to create invoice");
+        setIsLoading(false);
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to create invoice");
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
@@ -86,8 +130,12 @@ export function PremiumCards({ userName }: { userName: string }) {
           </div>
           
           <div className="flex flex-col w-full md:w-auto items-end gap-2">
-            <button className="w-full md:w-[300px] bg-white hover:bg-gray-200 text-black font-bold py-3 rounded-full text-[15px] transition-colors">
-              Subscribe to {TIERS.find(t => t.role === selected)?.name}
+            <button 
+              onClick={handleSubscribeClick}
+              disabled={isLoading}
+              className="w-full md:w-[300px] flex items-center justify-center gap-2 bg-white hover:bg-gray-200 text-black font-bold py-3 rounded-full text-[15px] transition-colors disabled:opacity-70"
+            >
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : `Subscribe to ${TIERS.find(t => t.role === selected)?.name}`}
             </button>
             <p className="text-[#71767b] text-[11px] max-w-md text-right leading-tight hidden md:block">
               By subscribing, you agree to our <span className="underline cursor-pointer text-white">Purchaser Terms</span>. Cancel anytime.
@@ -95,6 +143,52 @@ export function PremiumCards({ userName }: { userName: string }) {
           </div>
         </div>
       </div>
+
+      {/* Crypto Selection Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-[#16181c] border border-[#333] rounded-2xl w-full max-w-md p-6 relative">
+            <button 
+              onClick={() => !isLoading && setShowModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              disabled={isLoading}
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            <h2 className="text-2xl font-bold mb-2">Select Crypto</h2>
+            <p className="text-gray-400 text-sm mb-6">Choose your preferred cryptocurrency to complete the payment for the {TIERS.find(t => t.role === selectedRoleForPayment)?.name} plan.</p>
+            
+            {isLoading && !currencies.length ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-white" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                {currencies.map(c => (
+                  <button
+                    key={c.cid}
+                    onClick={() => handleCurrencySelect(c.currency)}
+                    disabled={isLoading}
+                    className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-[#333] hover:border-[#1d9bf0] hover:bg-[#1d9bf0]/10 transition-all disabled:opacity-50"
+                  >
+                    <img src={c.icon} alt={c.name} className="w-8 h-8" />
+                    <span className="text-sm font-semibold">{c.name}</span>
+                    <span className="text-xs text-gray-500">{c.currency}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            {isLoading && currencies.length > 0 && (
+              <div className="absolute inset-0 bg-[#16181c]/80 flex flex-col items-center justify-center rounded-2xl">
+                <Loader2 className="w-10 h-10 animate-spin text-[#1d9bf0] mb-4" />
+                <span className="font-medium text-white">Preparing checkout...</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }
