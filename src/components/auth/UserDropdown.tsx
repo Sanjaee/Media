@@ -44,7 +44,7 @@ export function UserDropdown({ user }: UserDropdownProps) {
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
-          <Link href="/profile" className="w-full cursor-pointer">Profile</Link>
+          <Link href={`/${(user as any).username || 'profile'}`} className="w-full cursor-pointer">Profile</Link>
         </DropdownMenuItem>
         <DropdownMenuItem>
           <Link href="/settings" className="w-full cursor-pointer">Settings</Link>
