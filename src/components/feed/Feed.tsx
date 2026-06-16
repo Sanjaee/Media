@@ -18,7 +18,6 @@ export function Feed({ initialPosts }: { initialPosts: PostWithRelations[] }) {
 
   return (
     <div className="flex flex-col pb-20">
-      <CreatePost />
       {posts.map((post) => (
         <PostCard key={post.id} post={post} />
       ))}

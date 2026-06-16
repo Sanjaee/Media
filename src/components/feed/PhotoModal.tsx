@@ -8,6 +8,7 @@ import { X, MessageCircle, Repeat2, Heart, BarChart2, Bookmark, Share } from "lu
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCloudinaryUrl } from "@/lib/utils";
 import { CommentFeed } from "@/components/comment/CommentFeed";
+import { UserNameWithRole } from "@/components/ui/UserNameWithRole";
 
 export function PhotoModal({ post, photoId }: { post: PostWithRelations, photoId: string }) {
   const router = useRouter();
@@ -67,8 +68,8 @@ export function PhotoModal({ post, photoId }: { post: PostWithRelations, photoId
                <AvatarFallback>{post.author.name?.charAt(0)}</AvatarFallback>
              </Avatar>
              <div>
-               <div className="flex items-center gap-1 text-sm font-bold">
-                 {post.author.name}
+               <div className="flex items-center gap-1">
+                 <UserNameWithRole displayName={post.author.name || ""} role={post.author.role} className="mb-0 text-sm" />
                  {post.author.isVerified && <span className="text-primary text-[10px] bg-primary/10 rounded-full w-4 h-4 flex items-center justify-center">✓</span>}
                </div>
                <div className="text-sm text-muted-foreground">@{post.author.username}</div>

@@ -1,26 +1,21 @@
 import Link from "next/link";
-import { Home, Search, Bell, Mail, User } from "lucide-react";
+import { Home, TrendingUp, Newspaper, Mail, User } from "lucide-react";
 
 export function LeftSidebar() {
   return (
-    <aside className="hidden sm:flex flex-col w-20 xl:w-64 sticky top-0 h-screen overflow-y-auto p-4">
-      <Link href="/" className="flex items-center gap-4 p-3 w-fit rounded-full hover:bg-accent transition">
-        <span className="font-bold text-xl xl:block hidden">MediaApp</span>
-        <span className="font-bold text-xl xl:hidden block">M</span>
-      </Link>
-      
-      <nav className="mt-4 flex flex-col gap-2">
+    <aside className="hidden sm:flex flex-col w-20 xl:w-64 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto p-4"> 
+      <nav className="flex flex-col gap-2">
         <Link href="/" className="flex items-center gap-4 p-3 w-fit rounded-full hover:bg-accent transition">
           <Home className="w-6 h-6" />
           <span className="text-xl hidden xl:block">Home</span>
         </Link>
         <Link href="/explore" className="flex items-center gap-4 p-3 w-fit rounded-full hover:bg-accent transition">
-          <Search className="w-6 h-6" />
-          <span className="text-xl hidden xl:block">Explore</span>
+          <TrendingUp className="w-6 h-6" />
+          <span className="text-xl hidden xl:block">Trending</span>
         </Link>
         <Link href="/notifications" className="flex items-center gap-4 p-3 w-fit rounded-full hover:bg-accent transition">
-          <Bell className="w-6 h-6" />
-          <span className="text-xl hidden xl:block">Notifications</span>
+          <Newspaper className="w-6 h-6" />
+          <span className="text-xl hidden xl:block">News</span>
         </Link>
         <Link href="/messages" className="flex items-center gap-4 p-3 w-fit rounded-full hover:bg-accent transition">
           <Mail className="w-6 h-6" />

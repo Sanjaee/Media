@@ -24,11 +24,19 @@ export function UserNameWithRole({
   const r = role ?? undefined;
   if (r) {
     return (
-      <span className={`inline-flex items-center gap-1 ${className}`}>
-        <span className={`${getRoleBadge(r)} shrink-0 leading-none`} />
-        <span className={getRoleNameClass(r)}>{displayName || "—"}</span>
-      </span>
+      <div className={`flex items-center gap-1 ${className}`}>
+        <span className={getRoleBadge(r)} />
+        <span className={`font-semibold whitespace-nowrap ${getRoleNameClass(r)}`}>
+          {displayName || "—"}
+        </span>
+      </div>
     );
   }
-  return <span className={className}>{displayName || "—"}</span>;
+  return (
+    <div className={`flex items-center gap-1.5 ${className}`}>
+      <span className="font-semibold whitespace-nowrap">
+        {displayName || "—"}
+      </span>
+    </div>
+  );
 }

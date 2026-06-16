@@ -10,6 +10,7 @@ export interface PostWithRelations {
     username: string | null;
     image: string | null;
     isVerified: boolean | null;
+    role: string | null;
   };
   media: {
     id: string;

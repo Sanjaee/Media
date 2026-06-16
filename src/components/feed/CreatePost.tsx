@@ -11,7 +11,7 @@ import Image from "next/image";
 
 import imageCompression from 'browser-image-compression';
 
-export function CreatePost() {
+export function CreatePost({ onSuccess }: { onSuccess?: () => void }) {
   const { data: session } = useSession();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -89,6 +89,7 @@ export function CreatePost() {
       addPost(newPost);
       setContent("");
       setSelectedFiles([]);
+      if (onSuccess) onSuccess();
     } catch (e) {
       console.error("Error creating post:", e);
       alert("Failed to create post. Pastikan ukuran file tidak terlalu besar.");

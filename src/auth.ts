@@ -11,5 +11,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
+  callbacks: {
+    async session({ session, user }) {
+      if (session.user) {
+        session.user.id = user.id;
+        // @ts-ignore - append custom role field
+        session.user.role = (user as any).role || "member";
+      }
+      return session;
+    }
+  },
   ...authConfig,
 })

@@ -28,6 +28,7 @@ export async function getFeedPosts() {
       username: post.author.username,
       image: post.author.image,
       isVerified: post.author.isVerified,
+      role: post.author.role,
     },
     media: post.media.map(m => ({
       id: m.id,
@@ -116,6 +117,7 @@ export async function createPostAction(input: CreatePostInput) {
       username: newPost.author.username,
       image: newPost.author.image,
       isVerified: newPost.author.isVerified,
+      role: newPost.author.role,
     },
     media: newPost.media.map(m => ({
       id: m.id,
@@ -180,6 +182,7 @@ export async function getPostById(postId: string) {
       username: post.author.username,
       image: post.author.image,
       isVerified: post.author.isVerified,
+      role: post.author.role,
     },
     media: post.media.map(m => ({
       id: m.id,

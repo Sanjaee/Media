@@ -1,6 +1,6 @@
 export function RightSidebar() {
   return (
-    <aside className="hidden lg:flex flex-col w-80 sticky top-0 h-screen overflow-y-auto p-4 gap-4">
+    <aside className="hidden lg:flex flex-col w-80 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto p-4 gap-4">
       <div className="bg-muted/50 rounded-xl p-4">
         <h2 className="font-bold text-xl mb-4">Sponsored (Iklan)</h2>
         <div className="aspect-video bg-muted rounded-lg mb-2"></div>

@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 import { useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { deleteCommentAction, getRepliesAction } from "@/actions/comment.actions";
 import { CommentForm } from "./CommentForm";
+import { UserNameWithRole } from "@/components/ui/UserNameWithRole";
 
 interface CommentItemProps {
   comment: any; // We'll type this properly later, or keep it generic
@@ -73,8 +74,8 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
       
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1 text-sm">
-          <Link href={`/${comment.author.username}`} className="font-bold hover:underline truncate">
-            {comment.author.name}
+          <Link href={`/${comment.author.username}`} className="truncate">
+            <UserNameWithRole displayName={comment.author.name || ""} role={comment.author.role} className="mb-0 text-sm" />
           </Link>
           <span className="text-muted-foreground truncate">@{comment.author.username}</span>
           <span className="text-muted-foreground">·</span>
@@ -90,7 +91,7 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
         <div className="flex items-center gap-6 mt-2 text-muted-foreground">
           <button 
             onClick={() => setIsReplying(!isReplying)}
-            className="flex items-center gap-1.5 text-[13px] hover:text-blue-500 transition-colors group/btn"
+            className="flex items-center gap-1 text-[13px] hover:text-blue-500 transition-colors group/btn"
           >
             <div className="p-1.5 rounded-full group-hover/btn:bg-blue-500/10"><MessageCircle size={16} /></div>
             <span>{comment.replyCount > 0 ? comment.replyCount : ""}</span>

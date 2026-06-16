@@ -10,6 +10,7 @@ import { useSession } from "next-auth/react";
 import { deletePostAction } from "@/actions/post.actions";
 import { useState } from "react";
 import { CommentForm } from "@/components/comment/CommentForm";
+import { UserNameWithRole } from "@/components/ui/UserNameWithRole";
 
 export function PostCard({ post }: { post: PostWithRelations }) {
   const { data: session } = useSession();
@@ -57,8 +58,8 @@ export function PostCard({ post }: { post: PostWithRelations }) {
       <div className="flex-1 min-w-0">
         {/* Header */}
         <div className="flex items-center gap-1 text-sm">
-          <Link href={`/${post.author.username || 'user'}`} className="font-bold hover:underline truncate">
-            {post.author.name}
+          <Link href={`/${post.author.username || 'user'}`} className="truncate">
+            <UserNameWithRole displayName={post.author.name || ""} role={post.author.role} className="mb-0 text-sm" />
           </Link>
           {post.author.isVerified && (
             <span className="text-primary text-[10px] bg-primary/10 rounded-full w-4 h-4 flex items-center justify-center">

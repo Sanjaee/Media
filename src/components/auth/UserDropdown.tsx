@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { UserNameWithRole } from "@/components/ui/UserNameWithRole"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -32,7 +33,11 @@ export function UserDropdown({ user }: UserDropdownProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end">
         <div className="flex flex-col space-y-1 p-2">
-          <p className="text-sm font-medium leading-none">{user.name}</p>
+          <UserNameWithRole 
+            displayName={user.name || ""} 
+            role={(user as any).role} 
+            className="mb-0 text-sm" 
+          />
           <p className="text-xs leading-none text-muted-foreground">
             {user.email}
           </p>
