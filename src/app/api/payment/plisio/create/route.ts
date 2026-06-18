@@ -12,6 +12,7 @@ const ROLE_PRICES: Record<string, { title: string; price: number }> = {
   mvp: { title: "MVP", price: 30 },
   mod: { title: "Moderator", price: 50 },
   god: { title: "God", price: 100 },
+  ad_slot_1d: { title: "Ad Slot (1 Day)", price: 10 },
 };
 
 export async function POST(req: Request) {

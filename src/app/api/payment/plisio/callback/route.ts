@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { transactions, users } from '@/db/schema';
+import { transactions, users, adSlots } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { getPlisioApiKey, mapPlisioStatusToDb, verifyPlisioCallback } from '@/lib/plisio';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
@@ -63,11 +64,28 @@ export async function POST(req: Request) {
 
     // If payment is successful, grant the role
     if (dbStatus === 'success') {
-      await db
-        .update(users)
-        .set({ role: transaction.role })
-        .where(eq(users.id, transaction.userId));
-      console.log(`[Plisio Callback] User ${transaction.userId} upgraded to ${transaction.role}`);
+      if (transaction.role.startsWith('ad_slot_')) {
+        const durationDays = transaction.role === 'ad_slot_1d' ? 1 : 1;
+        const activeUntil = new Date();
+        activeUntil.setDate(activeUntil.getDate() + durationDays);
+        
+        await db.insert(adSlots).values({
+          id: crypto.randomUUID(),
+          userId: transaction.userId,
+          transactionId: transaction.id,
+          status: 'pending_input',
+          activeUntil: activeUntil,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        console.log(`[Plisio Callback] User ${transaction.userId} purchased ad slot`);
+      } else {
+        await db
+          .update(users)
+          .set({ role: transaction.role })
+          .where(eq(users.id, transaction.userId));
+        console.log(`[Plisio Callback] User ${transaction.userId} upgraded to ${transaction.role}`);
+      }
     }
 
     return NextResponse.json({ status: 'success', message: 'Callback processed' }, { status: 200 });

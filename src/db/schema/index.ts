@@ -143,6 +143,21 @@ export const transactions = pgTable("transactions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const adSlots = pgTable("ad_slots", {
+  id: varchar("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  transactionId: varchar("transaction_id").references(() => transactions.id),
+  title: varchar("title"),
+  description: text("description"),
+  imageUrl: text("image_url"),
+  linkUrl: text("link_url"),
+  status: varchar("status").default("pending_payment"),
+  activeFrom: timestamp("active_from"),
+  activeUntil: timestamp("active_until"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
   comments: many(comments),
@@ -150,6 +165,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   followers: many(follows, { relationName: "following" }),
   following: many(follows, { relationName: "follower" }),
   transactions: many(transactions),
+  adSlots: many(adSlots),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
@@ -202,5 +218,16 @@ export const likesRelations = relations(likes, ({ one }) => ({
   post: one(posts, {
     fields: [likes.postId],
     references: [posts.id],
+  }),
+}));
+
+export const adSlotsRelations = relations(adSlots, ({ one }) => ({
+  user: one(users, {
+    fields: [adSlots.userId],
+    references: [users.id],
+  }),
+  transaction: one(transactions, {
+    fields: [adSlots.transactionId],
+    references: [transactions.id],
   }),
 }));

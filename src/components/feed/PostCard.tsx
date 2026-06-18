@@ -48,7 +48,13 @@ export function PostCard({ post }: { post: PostWithRelations }) {
 
   const handleLike = async () => {
     if (!session) {
-      toast.error("Please sign in to like posts");
+      toast.error("Please sign in to like posts", {
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          border: '1px solid #b91c1c',
+        }
+      });
       return;
     }
     if (isLiking) return;
