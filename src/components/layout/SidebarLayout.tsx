@@ -15,7 +15,7 @@ export function SidebarLayout({ navbar, leftSidebar, rightSidebar, children }: S
   // Show sidebars and navbar only on these main app routes
   const showSidebars = ["/", "/explore", "/notifications", "/messages", "/settings"].includes(pathname);
 
-  if (pathname === "/premium") {
+  if (pathname === "/premium" || pathname.startsWith("/admin")) {
     return <>{children}</>;
   }
 

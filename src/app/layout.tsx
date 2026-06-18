@@ -24,6 +24,8 @@ export const metadata: Metadata = {
   description: "Social media app starter",
 };
 
+import { TooltipProvider } from "@/components/ui/tooltip";
+
 export default function RootLayout({
   children,
   modal,
@@ -42,15 +44,17 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <SessionProvider>
           <QueryProvider>
-            <SidebarLayout 
-              navbar={<Navbar />}
-              leftSidebar={<LeftSidebar />} 
-              rightSidebar={<RightSidebar />}
-            >
-              {children}
-            </SidebarLayout>
-            {modal}
-            <Toaster />
+            <TooltipProvider>
+              <SidebarLayout 
+                navbar={<Navbar />}
+                leftSidebar={<LeftSidebar />} 
+                rightSidebar={<RightSidebar />}
+              >
+                {children}
+              </SidebarLayout>
+              {modal}
+              <Toaster />
+            </TooltipProvider>
           </QueryProvider>
         </SessionProvider>
       </body>

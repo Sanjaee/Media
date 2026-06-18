@@ -43,6 +43,11 @@ export function UserDropdown({ user }: UserDropdownProps) {
           </p>
         </div>
         <DropdownMenuSeparator />
+        {(user as any).role === "owner" && (
+          <DropdownMenuItem>
+            <Link href="/admin" className="w-full cursor-pointer font-bold text-primary">Dashboard</Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem>
           <Link href={`/${(user as any).username || 'profile'}`} className="w-full cursor-pointer">Profile</Link>
         </DropdownMenuItem>
