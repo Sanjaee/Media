@@ -22,16 +22,6 @@ export default async function PremiumPage() {
           <X className="w-6 h-6 text-white" />
         </Link>
       </div>
-      
-      {/* Header Tabs */}
-      <div className="flex bg-[#16181c] rounded-full p-1 mb-2 w-fit mt-4">
-        <button className="bg-white text-black font-semibold rounded-full px-8 py-2 text-sm transition">
-          Monthly
-        </button>
-        <button className="text-[#71767b] font-semibold rounded-full px-8 py-2 text-sm hover:text-white transition">
-          Annual <span className="font-normal text-xs ml-1">· 40% Off</span>
-        </button>
-      </div>
 
       <PremiumCards userName={userName} />
 

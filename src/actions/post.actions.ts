@@ -193,3 +193,54 @@ export async function getPostById(postId: string) {
     stats: { replies: post.commentCount || 0, reposts: post.repostCount || 0, likes: post.likeCount || 0, views: 0 }
   };
 }
+
+import Fuse from "fuse.js";
+
+export async function searchPostsAction(query: string, limit: number = 5) {
+  if (!query || query.trim().length === 0) return [];
+
+  // Fetch recent posts to search against. In a real large app, you'd use pg_trgm or similar,
+  // but for a lightweight library-based approach, we fetch a reasonable subset and fuzzy search.
+  const allPosts = await db.query.posts.findMany({
+    orderBy: [desc(posts.createdAt)],
+    with: {
+      author: true,
+      media: true,
+    },
+    limit: 500, // Reasonable limit for in-memory fuzzy search
+  });
+
+  const fuse = new Fuse(allPosts, {
+    keys: ["content", "author.name", "author.username"],
+    threshold: 0.4,
+    includeScore: true,
+  });
+
+  const results = fuse.search(query);
+
+  return results.slice(0, limit).map(result => ({
+    id: result.item.id,
+    content: result.item.content,
+    createdAt: result.item.createdAt,
+    author: {
+      id: result.item.author.id,
+      name: result.item.author.name,
+      username: result.item.author.username,
+      image: result.item.author.image,
+      isVerified: result.item.author.isVerified,
+      role: result.item.author.role,
+    },
+    media: result.item.media.map(m => ({
+      id: m.id,
+      type: m.type,
+      url: m.url,
+      publicId: m.publicId,
+    })),
+    stats: {
+      replies: result.item.commentCount || 0,
+      reposts: result.item.repostCount || 0,
+      likes: result.item.likeCount || 0,
+      views: 0,
+    }
+  }));
+}
