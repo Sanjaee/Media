@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { getCloudinaryUrl } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { deletePostAction } from "@/actions/post.actions";
+import { deletePostAction, toggleLikeAction } from "@/actions/post.actions";
 import { useState } from "react";
 import { CommentForm } from "@/components/comment/CommentForm";
 import { UserNameWithRole } from "@/components/ui/UserNameWithRole";
@@ -41,6 +41,36 @@ export function PostCard({ post }: { post: PostWithRelations }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+
+  const [isLiked, setIsLiked] = useState(post.hasLiked || false);
+  const [likeCount, setLikeCount] = useState(post.stats?.likes || 0);
+  const [isLiking, setIsLiking] = useState(false);
+
+  const handleLike = async () => {
+    if (!session) {
+      toast.error("Please sign in to like posts");
+      return;
+    }
+    if (isLiking) return;
+
+    setIsLiking(true);
+    const prevLiked = isLiked;
+    const prevCount = likeCount;
+
+    setIsLiked(!prevLiked);
+    setLikeCount(prevLiked ? Math.max(0, prevCount - 1) : prevCount + 1);
+
+    try {
+      const result = await toggleLikeAction(post.id);
+      setIsLiked(result.liked);
+    } catch (e) {
+      setIsLiked(prevLiked);
+      setLikeCount(prevCount);
+      toast.error("Failed to like post");
+    } finally {
+      setIsLiking(false);
+    }
+  };
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -185,9 +215,15 @@ export function PostCard({ post }: { post: PostWithRelations }) {
 
         {/* Actions */}
         <div className="flex justify-between items-center mt-3 text-muted-foreground">
-          <button className="flex-1 flex justify-center items-center gap-2 py-1.5 hover:bg-muted/50 rounded-md transition-colors text-[13px] font-medium">
-            <ThumbsUp size={18} />
-            <span>Like</span>
+          <button 
+            onClick={handleLike}
+            className="flex-1 flex justify-center items-center gap-2 py-1.5 hover:bg-muted/50 rounded-md transition-colors text-[13px] font-medium"
+          >
+            <ThumbsUp 
+              size={18} 
+              className={isLiked ? "fill-red-500 text-red-500" : ""} 
+            />
+            <span className={isLiked ? "text-red-500" : ""}>{likeCount || "Like"}</span>
           </button>
           
           <button 
@@ -195,7 +231,7 @@ export function PostCard({ post }: { post: PostWithRelations }) {
             className="flex-1 flex justify-center items-center gap-2 py-1.5 hover:bg-muted/50 rounded-md transition-colors text-[13px] font-medium"
           >
             <MessageCircle size={18} />
-            <span>Comment</span>
+            <span>{post.stats?.replies || "Comment"}</span>
           </button>
 
           <button className="flex-1 flex justify-center items-center gap-2 py-1.5 hover:bg-muted/50 rounded-md transition-colors text-[13px] font-medium">

@@ -2,17 +2,21 @@
 
 import { db } from "@/db";
 import { posts, media, users, likes, comments } from "@/db/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { auth } from "@/auth";
 import { createPostSchema, CreatePostInput } from "@/lib/validations/post";
 import cloudinary from "@/lib/cloudinary";
 
 export async function getFeedPosts() {
+  const session = await auth();
+  const userId = session?.user?.id;
+
   const allPosts = await db.query.posts.findMany({
     orderBy: [desc(posts.createdAt)],
     with: {
       author: true,
       media: true,
+      ...(userId ? { likes: { where: (likes, { eq }) => eq(likes.userId, userId) } } : {}),
     },
     limit: 50,
   });
@@ -41,7 +45,8 @@ export async function getFeedPosts() {
       reposts: post.repostCount || 0,
       likes: post.likeCount || 0,
       views: 0, // Placeholder
-    }
+    },
+    hasLiked: post.likes ? post.likes.length > 0 : false,
   }));
 }
 
@@ -190,13 +195,38 @@ export async function getPostById(postId: string) {
       url: m.url,
       publicId: m.publicId,
     })),
-    stats: { replies: post.commentCount || 0, reposts: post.repostCount || 0, likes: post.likeCount || 0, views: 0 }
+    stats: { replies: post.commentCount || 0, reposts: post.repostCount || 0, likes: post.likeCount || 0, views: 0 },
+    hasLiked: false, // Since this is mostly used for the created post itself or by id, hasLiked logic can be added later if needed
   };
+}
+
+export async function toggleLikeAction(postId: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  
+  const userId = session.user.id;
+  
+  const existingLike = await db.query.likes.findFirst({
+    where: and(eq(likes.postId, postId), eq(likes.userId, userId))
+  });
+
+  if (existingLike) {
+    await db.delete(likes).where(and(eq(likes.postId, postId), eq(likes.userId, userId)));
+    await db.update(posts).set({ likeCount: sql`like_count - 1` }).where(eq(posts.id, postId));
+    return { liked: false };
+  } else {
+    await db.insert(likes).values({ id: crypto.randomUUID(), postId, userId });
+    await db.update(posts).set({ likeCount: sql`like_count + 1` }).where(eq(posts.id, postId));
+    return { liked: true };
+  }
 }
 
 import Fuse from "fuse.js";
 
 export async function searchPostsAction(query: string, limit: number = 5) {
+  const session = await auth();
+  const userId = session?.user?.id;
+
   if (!query || query.trim().length === 0) return [];
 
   // Fetch recent posts to search against. In a real large app, you'd use pg_trgm or similar,
@@ -206,6 +236,7 @@ export async function searchPostsAction(query: string, limit: number = 5) {
     with: {
       author: true,
       media: true,
+      ...(userId ? { likes: { where: (likes, { eq }) => eq(likes.userId, userId) } } : {}),
     },
     limit: 500, // Reasonable limit for in-memory fuzzy search
   });
@@ -241,6 +272,7 @@ export async function searchPostsAction(query: string, limit: number = 5) {
       reposts: result.item.repostCount || 0,
       likes: result.item.likeCount || 0,
       views: 0,
-    }
+    },
+    hasLiked: result.item.likes ? result.item.likes.length > 0 : false,
   }));
 }

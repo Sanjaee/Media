@@ -193,3 +193,14 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const likesRelations = relations(likes, ({ one }) => ({
+  user: one(users, {
+    fields: [likes.userId],
+    references: [users.id],
+  }),
+  post: one(posts, {
+    fields: [likes.postId],
+    references: [posts.id],
+  }),
+}));

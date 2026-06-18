@@ -69,8 +69,9 @@ export function NavbarSearch() {
                     key={result.id}
                     className="flex items-center gap-3 p-3 hover:bg-accent rounded-lg cursor-pointer transition" 
                     onClick={() => { 
-                      setQuery(result.content.substring(0, 50)); 
-                      router.push(`/explore?q=${encodeURIComponent(result.content)}`);
+                      const contentStr = result.content || "";
+                      setQuery(contentStr.substring(0, 50)); 
+                      router.push(`/explore?q=${encodeURIComponent(contentStr)}`);
                     }}
                   >
                     <Search className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
