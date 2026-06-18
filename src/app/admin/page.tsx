@@ -9,8 +9,11 @@ import {
 } from "@/components/ui/sidebar"
 
 import data from "./data.json"
+import { getNewUserRegistrations } from "@/actions/admin.actions"
 
-export default function Page() {
+export default async function Page() {
+  const chartData = await getNewUserRegistrations()
+
   return (
     <SidebarProvider
       style={
@@ -28,7 +31,7 @@ export default function Page() {
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
               <SectionCards />
               <div className="px-4 lg:px-6">
-                <ChartAreaInteractive />
+                <ChartAreaInteractive chartData={chartData} />
               </div>
               <DataTable data={data} />
             </div>
