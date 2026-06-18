@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import {
   IconCamera,
   IconChartBar,
@@ -157,11 +158,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              render={<a href="#" />}
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
+              render={<Link href="/" />}
+              className="data-[slot=sidebar-menu-button]:p-1.5! justify-center hover:bg-transparent"
             >
-              <IconInnerShadowTop className="size-5!" />
-              <span className="text-base font-semibold">Acme Inc.</span>
+              <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { count, sql } from "drizzle-orm";
 
+import { auth } from "@/auth";
+
 export async function getNewUserRegistrations() {
   try {
     const stats = await db
@@ -36,6 +38,38 @@ export async function getNewUserRegistrations() {
     return last90Days;
   } catch (error) {
     console.error("Failed to fetch user registration stats:", error);
+    return [];
+  }
+}
+
+export async function getAllUsers() {
+  try {
+    const session = await auth();
+    if ((session?.user as any)?.role !== "owner") {
+      throw new Error("Unauthorized");
+    }
+
+    const allUsers = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        email: users.email,
+        image: users.image,
+        role: users.role,
+        isVerified: users.isVerified,
+        isBanned: users.isBanned,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .orderBy(sql`${users.createdAt} DESC`);
+
+    return allUsers.map(u => ({
+      ...u,
+      createdAt: u.createdAt?.toISOString(),
+    }));
+  } catch (error) {
+    console.error("Failed to fetch all users:", error);
     return [];
   }
 }

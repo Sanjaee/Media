@@ -8,11 +8,11 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar"
 
-import data from "./data.json"
-import { getNewUserRegistrations } from "@/actions/admin.actions"
+import { getNewUserRegistrations, getAllUsers } from "@/actions/admin.actions"
 
 export default async function Page() {
   const chartData = await getNewUserRegistrations()
+  const usersData = await getAllUsers()
 
   return (
     <SidebarProvider
@@ -33,7 +33,7 @@ export default async function Page() {
               <div className="px-4 lg:px-6">
                 <ChartAreaInteractive chartData={chartData} />
               </div>
-              <DataTable data={data} />
+              <DataTable data={usersData as any} />
             </div>
           </div>
         </div>
