@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { PostWithRelations } from "@/store/usePostStore";
 import { PostCard } from "./PostCard";
+import { PostSkeleton } from "./PostSkeleton";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getInfiniteFeedPostsAction } from "@/actions/post.actions";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
@@ -85,9 +86,7 @@ export function Feed({ initialData }: { initialData: { posts: PostWithRelations[
               }}
             >
               {isLoaderRow ? (
-                <div className="flex justify-center p-4 text-muted-foreground">
-                  Memuat post...
-                </div>
+                <PostSkeleton />
               ) : (
                 <PostCard post={post} />
               )}
