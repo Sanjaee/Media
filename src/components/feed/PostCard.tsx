@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Bookmark, Share, Trash2, MoreHorizontal, Edit, UserPlus, Ban, Flag, ThumbsUp } from "lucide-react";
+import { MessageCircle, Bookmark, Share, Trash2, MoreHorizontal, Edit, UserPlus, Ban, Flag, ThumbsUp, Copy } from "lucide-react";
 import { PostWithRelations, usePostStore } from "@/store/usePostStore";
 import {
   DropdownMenu,
@@ -27,7 +28,11 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  DialogHeader,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { getCloudinaryUrl } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { deletePostAction, toggleLikeAction, toggleBookmarkAction } from "@/actions/post.actions";
@@ -37,6 +42,7 @@ import { UserNameWithRole } from "@/components/ui/UserNameWithRole";
 import { toast } from "sonner";
 
 export function PostCard({ post: initialPost }: { post: PostWithRelations }) {
+  const router = useRouter();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const deletePost = usePostStore(state => state.deletePost);
@@ -44,6 +50,7 @@ export function PostCard({ post: initialPost }: { post: PostWithRelations }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
   const [isLiked, setIsLiked] = useState(post.hasLiked ?? false);
   const [likeCount, setLikeCount] = useState(post.stats?.likes ?? 0);
@@ -106,6 +113,20 @@ export function PostCard({ post: initialPost }: { post: PostWithRelations }) {
     }
   };
 
+  const handleShare = () => {
+    setShowShareDialog(true);
+  };
+
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/${post.author.username || 'user'}/status/${post.id}` : '';
+
+  const copyToClipboard = () => {
+    if (typeof navigator !== 'undefined') {
+      navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copied to clipboard!");
+      setShowShareDialog(false);
+    }
+  };
+
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
@@ -124,8 +145,27 @@ export function PostCard({ post: initialPost }: { post: PostWithRelations }) {
 
   const isOwner = session?.user?.id === post.author.id;
 
+  const handleArticleClick = (e: React.MouseEvent) => {
+    // Ignore clicks on links, buttons, or interactive elements
+    const target = e.target as HTMLElement;
+    if (target.closest('a, button, [role="menuitem"], [role="dialog"], input, textarea')) {
+      return;
+    }
+    
+    // Prevent default text selection from triggering navigation (optional but good practice)
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) {
+      return;
+    }
+
+    router.push(`/${post.author.username || 'user'}/status/${post.id}`);
+  };
+
   return (
-    <article className="border-b px-4 py-3 hover:bg-muted/30 transition-colors flex flex-col relative">
+    <article 
+      onClick={handleArticleClick}
+      className="border-b px-4 py-3 hover:bg-muted/30 transition-colors flex flex-col relative cursor-pointer"
+    >
       {/* Header Row */}
       <div className="flex justify-between items-start mb-2">
         <div className="flex gap-2 text-sm">
@@ -302,7 +342,10 @@ export function PostCard({ post: initialPost }: { post: PostWithRelations }) {
             <span className={isBookmarked ? "text-primary" : ""}>Bookmark</span>
           </button>
 
-          <button className="flex-1 flex justify-center items-center gap-2 py-1.5 hover:bg-muted/50 rounded-md transition-colors text-[13px] font-medium">
+          <button 
+            onClick={handleShare}
+            className="flex-1 flex justify-center items-center gap-2 py-1.5 hover:bg-muted/50 rounded-md transition-colors text-[13px] font-medium"
+          >
             <Share size={18} />
             <span>Share</span>
           </button>
@@ -384,6 +427,31 @@ export function PostCard({ post: initialPost }: { post: PostWithRelations }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Post</DialogTitle>
+            <DialogDescription>
+              Anyone with this link will be able to view this post.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2 mt-4">
+            <div className="grid flex-1 gap-2">
+              <Input
+                readOnly
+                value={shareUrl}
+                className="w-full text-sm text-muted-foreground"
+              />
+            </div>
+            <Button size="icon" onClick={copyToClipboard} className="px-3 shrink-0">
+              <span className="sr-only">Copy</span>
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </article>
   );
 }

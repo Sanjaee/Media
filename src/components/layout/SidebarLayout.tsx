@@ -13,7 +13,9 @@ export function SidebarLayout({ navbar, leftSidebar, rightSidebar, children }: S
   const pathname = usePathname();
 
   // Show sidebars and navbar only on these main app routes
-  const showSidebars = ["/", "/explore", "/notifications", "/messages", "/settings"].includes(pathname);
+  const mainRoutes = ["/", "/explore", "/notifications", "/messages", "/settings", "/bookmarks"];
+  const isPostDetail = pathname.includes("/status/");
+  const showSidebars = mainRoutes.includes(pathname) || isPostDetail;
 
   if (pathname === "/premium" || pathname.startsWith("/admin")) {
     return <>{children}</>;

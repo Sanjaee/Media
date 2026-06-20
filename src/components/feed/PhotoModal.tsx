@@ -4,15 +4,27 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { PostWithRelations } from "@/store/usePostStore";
-import { X, MessageCircle, Repeat2, Heart, BarChart2, Bookmark, Share, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, MessageCircle, Repeat2, Heart, BarChart2, Bookmark, Share, ChevronLeft, ChevronRight, Copy } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCloudinaryUrl } from "@/lib/utils";
 import { CommentFeed } from "@/components/comment/CommentFeed";
 import { UserNameWithRole } from "@/components/ui/UserNameWithRole";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogHeader,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export function PhotoModal({ post, photoId }: { post: PostWithRelations, photoId: string }) {
   const router = useRouter();
   const overlayRef = useRef<HTMLDivElement>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -50,6 +62,20 @@ export function PhotoModal({ post, photoId }: { post: PostWithRelations, photoId
   const photoUrl = post.media?.find(m => m.id === photoId)?.url;
 
   if (!photoUrl) return null;
+
+  const handleShare = () => {
+    setShowShareDialog(true);
+  };
+
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/${post.author.username || 'user'}/status/${post.id}/photo/${photoId}` : '';
+
+  const copyToClipboard = () => {
+    if (typeof navigator !== 'undefined') {
+      navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copied to clipboard!");
+      setShowShareDialog(false);
+    }
+  };
 
   return (
     <div 
@@ -140,6 +166,9 @@ export function PhotoModal({ post, photoId }: { post: PostWithRelations, photoId
              <button className="flex items-center gap-1 text-[13px] hover:text-blue-500 transition-colors group">
                <div className="p-2 rounded-full group-hover:bg-blue-500/10"><BarChart2 size={18} /></div>
              </button>
+             <button onClick={handleShare} className="flex items-center gap-1 text-[13px] hover:text-blue-500 transition-colors group">
+               <div className="p-2 rounded-full group-hover:bg-blue-500/10"><Share size={18} /></div>
+             </button>
            </div>
         </div>
         
@@ -148,6 +177,31 @@ export function PhotoModal({ post, photoId }: { post: PostWithRelations, photoId
           <CommentFeed postId={post.id} />
         </div>
       </div>
+
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Photo</DialogTitle>
+            <DialogDescription>
+              Anyone with this link will be able to view this photo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2 mt-4">
+            <div className="grid flex-1 gap-2">
+              <Input
+                readOnly
+                value={shareUrl}
+                className="w-full text-sm text-muted-foreground"
+              />
+            </div>
+            <Button size="icon" onClick={copyToClipboard} className="px-3 shrink-0">
+              <span className="sr-only">Copy</span>
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
