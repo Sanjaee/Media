@@ -109,6 +109,11 @@ export function CommentItem({ comment, postId, isReply = false, level = 0, autoE
           </div>
 
           <div className={`mt-0.5 whitespace-pre-wrap break-words pr-8 ${textClass}`}>
+            {level > 0 && comment.parentComment && (
+              <Link href={`/${comment.parentComment.author.username}`} className="text-blue-500 hover:underline mr-1 font-medium">
+                @{comment.parentComment.author.username}
+              </Link>
+            )}
             {comment.content}
           </div>
 

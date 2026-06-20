@@ -31,7 +31,14 @@ export async function createCommentAction({ postId, content, parentCommentId }: 
 
   const newComment = await db.query.comments.findFirst({
     where: eq(comments.id, commentId),
-    with: { author: true },
+    with: { 
+      author: true,
+      parentComment: {
+        with: {
+          author: true,
+        }
+      }
+    },
   });
 
   return newComment;
@@ -67,7 +74,14 @@ export async function getRepliesAction(parentCommentId: string, cursor?: Date | 
     where: whereClause,
     orderBy: [asc(comments.createdAt)],
     limit: limit + 1,
-    with: { author: true },
+    with: { 
+      author: true,
+      parentComment: {
+        with: {
+          author: true,
+        }
+      }
+    },
   });
 
   let nextCursor: Date | null = null;

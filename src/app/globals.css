@@ -294,17 +294,18 @@ body {
   box-shadow: 0 4px 12px oklch(0.488 0.243 264.376 / 0.25);
 }
 
-/* Custom Scrollbar for Crypto Modal */
-.custom-scrollbar::-webkit-scrollbar {
+/* Custom Scrollbar Global */
+::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
-.custom-scrollbar::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background: #333c45;
   border-radius: 10px;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
   background: #1d9bf0;
 }

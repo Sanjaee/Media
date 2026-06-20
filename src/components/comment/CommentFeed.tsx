@@ -7,9 +7,11 @@ import { CommentForm } from "./CommentForm";
 
 interface CommentFeedProps {
   postId: string;
+  hideHeader?: boolean;
+  hideForm?: boolean;
 }
 
-export function CommentFeed({ postId }: CommentFeedProps) {
+export function CommentFeed({ postId, hideHeader = false, hideForm = false }: CommentFeedProps) {
   const {
     data,
     fetchNextPage,
@@ -29,13 +31,16 @@ export function CommentFeed({ postId }: CommentFeedProps) {
 
   return (
     <div className="w-full pb-20">
-      <div className="border-b-1 border-muted"></div>
-      
-      <div className="py-2 px-4 font-bold text-xl border-b">
-        Comments
-      </div>
+      {!hideHeader && (
+        <>
+          <div className="border-b-1 border-muted"></div>
+          <div className="py-2 px-4 font-bold text-xl border-b">
+            Comments
+          </div>
+        </>
+      )}
 
-      <CommentForm postId={postId} />
+      {!hideForm && <CommentForm postId={postId} />}
 
       {status === "pending" ? (
         <div className="p-4 text-center text-muted-foreground">Loading comments...</div>
