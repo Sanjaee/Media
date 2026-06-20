@@ -5,6 +5,19 @@ import { users, posts, media } from './schema/index';
 
 async function seed() {
   console.log('Seeding posts with media...');
+
+  const loremIpsum = [
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+    "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+    "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio.",
+    "Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris.",
+    "Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula.",
+    "Donec lobortis risus a elit. Etiam aliquet faucibus lacus.",
+    "Aliquam erat volutpat. Nam scelerisque, libero quis blandit tristique, elit orci faucibus nisl, id pellentesque risus nisi et neque."
+  ];
   
   // Get at least one user
   let userList = await db.select().from(users).limit(1);
@@ -26,10 +39,18 @@ async function seed() {
 
   for (let i = 0; i < 1000; i++) {
     const postId = crypto.randomUUID();
+    
+    // Pick 1 to 3 random sentences for content
+    const numSentences = Math.floor(Math.random() * 3) + 1;
+    let content = "";
+    for(let s = 0; s < numSentences; s++) {
+      content += loremIpsum[Math.floor(Math.random() * loremIpsum.length)] + " ";
+    }
+
     postsData.push({
       id: postId,
       authorId: userId,
-      content: `This is seed post number ${i + 1} with image! Hello world!`,
+      content: content.trim(),
       visibility: 'public',
     });
 
@@ -41,7 +62,7 @@ async function seed() {
           id: crypto.randomUUID(),
           postId: postId,
           type: 'image',
-          url: `https://res.cloudinary.com/dgnpa43as/image/upload/v1756577738/lostmedia/bcngdyfivk2zcsottqti.png`,
+          url: `https://picsum.photos/id/${Math.floor(Math.random() * 1000) + 1}/800/600`,
           width: 800,
           height: 600,
           sortOrder: j,
