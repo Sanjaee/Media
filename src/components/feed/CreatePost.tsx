@@ -9,11 +9,13 @@ import { createPostAction } from "@/actions/post.actions";
 import { usePostStore } from "@/store/usePostStore";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import { useQueryClient } from "@tanstack/react-query";
 
 import imageCompression from 'browser-image-compression';
 
 export function CreatePost({ onSuccess }: { onSuccess?: () => void }) {
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -110,7 +112,12 @@ export function CreatePost({ onSuccess }: { onSuccess?: () => void }) {
       addPost(newPost);
       setContent("");
       setSelectedFiles([]);
+      toast.success("Post created successfully!");
       if (onSuccess) onSuccess();
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (e) {
       console.error("Error creating post:", e);
       toast.error("Failed to create post. Please ensure your files are not too large.");

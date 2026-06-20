@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,26 +36,22 @@ import { CommentForm } from "@/components/comment/CommentForm";
 import { UserNameWithRole } from "@/components/ui/UserNameWithRole";
 import { toast } from "sonner";
 
-export function PostCard({ post }: { post: PostWithRelations }) {
+export function PostCard({ post: initialPost }: { post: PostWithRelations }) {
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
   const deletePost = usePostStore(state => state.deletePost);
+  const [post, setPost] = useState(initialPost);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
-  const [isLiked, setIsLiked] = useState(post.hasLiked || false);
-  const [likeCount, setLikeCount] = useState(post.stats?.likes || 0);
+  const [isLiked, setIsLiked] = useState(post.hasLiked ?? false);
+  const [likeCount, setLikeCount] = useState(post.stats?.likes ?? 0);
   const [isLiking, setIsLiking] = useState(false);
 
   const handleLike = async () => {
-    if (!session) {
-      toast.error("Please sign in to like posts", {
-        style: {
-          background: '#ef4444',
-          color: 'white',
-          border: '1px solid #b91c1c',
-        }
-      });
+    if (!session?.user) {
+      toast.error("Please login to like posts");
       return;
     }
     if (isLiking) return;
@@ -64,7 +61,7 @@ export function PostCard({ post }: { post: PostWithRelations }) {
     const prevCount = likeCount;
 
     setIsLiked(!prevLiked);
-    setLikeCount(prevLiked ? Math.max(0, prevCount - 1) : prevCount + 1);
+    setLikeCount(prevCount + (prevLiked ? -1 : 1));
 
     try {
       const result = await toggleLikeAction(post.id);
@@ -83,9 +80,13 @@ export function PostCard({ post }: { post: PostWithRelations }) {
     try {
       await deletePostAction(post.id);
       deletePost(post.id);
+      toast.success("Post deleted successfully!");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (e) {
       console.error(e);
-      toast.error("Failed to delete post");
+      toast.error("Failed to delete post. Please try again.");
       setIsDeleting(false);
     }
   };
