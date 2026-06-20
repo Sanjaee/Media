@@ -162,6 +162,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
   comments: many(comments),
   likes: many(likes),
+  bookmarks: many(bookmarks),
   followers: many(follows, { relationName: "following" }),
   following: many(follows, { relationName: "follower" }),
   transactions: many(transactions),
@@ -176,6 +177,7 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   media: many(media),
   comments: many(comments),
   likes: many(likes),
+  bookmarks: many(bookmarks),
 }));
 
 export const mediaRelations = relations(media, ({ one }) => ({
@@ -229,5 +231,16 @@ export const adSlotsRelations = relations(adSlots, ({ one }) => ({
   transaction: one(transactions, {
     fields: [adSlots.transactionId],
     references: [transactions.id],
+  }),
+}));
+
+export const bookmarksRelations = relations(bookmarks, ({ one }) => ({
+  user: one(users, {
+    fields: [bookmarks.userId],
+    references: [users.id],
+  }),
+  post: one(posts, {
+    fields: [bookmarks.postId],
+    references: [posts.id],
   }),
 }));

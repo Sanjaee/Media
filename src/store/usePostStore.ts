@@ -28,6 +28,7 @@ export interface PostWithRelations {
     views: number;
   };
   hasLiked?: boolean;
+  hasBookmarked?: boolean;
 }
 
 interface PostState {

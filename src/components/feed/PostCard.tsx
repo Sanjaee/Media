@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { getCloudinaryUrl } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { deletePostAction, toggleLikeAction } from "@/actions/post.actions";
+import { deletePostAction, toggleLikeAction, toggleBookmarkAction } from "@/actions/post.actions";
 import { useState } from "react";
 import { CommentForm } from "@/components/comment/CommentForm";
 import { UserNameWithRole } from "@/components/ui/UserNameWithRole";
@@ -48,6 +48,9 @@ export function PostCard({ post: initialPost }: { post: PostWithRelations }) {
   const [isLiked, setIsLiked] = useState(post.hasLiked ?? false);
   const [likeCount, setLikeCount] = useState(post.stats?.likes ?? 0);
   const [isLiking, setIsLiking] = useState(false);
+
+  const [isBookmarked, setIsBookmarked] = useState(post.hasBookmarked ?? false);
+  const [isBookmarking, setIsBookmarking] = useState(false);
 
   const handleLike = async () => {
     if (!session?.user) {
@@ -72,6 +75,34 @@ export function PostCard({ post: initialPost }: { post: PostWithRelations }) {
       toast.error("Failed to like post");
     } finally {
       setIsLiking(false);
+    }
+  };
+
+  const handleBookmark = async () => {
+    if (!session?.user) {
+      toast.error("Please login to bookmark posts");
+      return;
+    }
+    if (isBookmarking) return;
+
+    setIsBookmarking(true);
+    const prevBookmarked = isBookmarked;
+
+    setIsBookmarked(!prevBookmarked);
+
+    try {
+      const result = await toggleBookmarkAction(post.id);
+      setIsBookmarked(result.bookmarked);
+      if (result.bookmarked) {
+        toast.success("Post bookmarked!");
+      } else {
+        toast.success("Post removed from bookmarks.");
+      }
+    } catch (e) {
+      setIsBookmarked(prevBookmarked);
+      toast.error("Failed to bookmark post");
+    } finally {
+      setIsBookmarking(false);
     }
   };
 
@@ -260,9 +291,15 @@ export function PostCard({ post: initialPost }: { post: PostWithRelations }) {
             <span>{post.stats?.replies || "Comment"}</span>
           </button>
 
-          <button className="flex-1 flex justify-center items-center gap-2 py-1.5 hover:bg-muted/50 rounded-md transition-colors text-[13px] font-medium">
-            <Bookmark size={18} />
-            <span>Bookmark</span>
+          <button 
+            onClick={handleBookmark}
+            className="flex-1 flex justify-center items-center gap-2 py-1.5 hover:bg-muted/50 rounded-md transition-colors text-[13px] font-medium"
+          >
+            <Bookmark 
+              size={18} 
+              className={isBookmarked ? "fill-primary text-primary" : ""} 
+            />
+            <span className={isBookmarked ? "text-primary" : ""}>Bookmark</span>
           </button>
 
           <button className="flex-1 flex justify-center items-center gap-2 py-1.5 hover:bg-muted/50 rounded-md transition-colors text-[13px] font-medium">

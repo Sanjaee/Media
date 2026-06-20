@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { posts, media, users, likes, comments } from "@/db/schema";
+import { posts, media, users, likes, comments, bookmarks } from "@/db/schema";
 import { eq, desc, sql, and, or } from "drizzle-orm";
 import { auth } from "@/auth";
 import { createPostSchema, CreatePostInput } from "@/lib/validations/post";
@@ -16,7 +16,10 @@ export async function getFeedPosts() {
     with: {
       author: true,
       media: true,
-      ...(userId ? { likes: { where: (likes, { eq }) => eq(likes.userId, userId) } } : {}),
+      ...(userId ? { 
+        likes: { where: (likes, { eq }) => eq(likes.userId, userId) },
+        bookmarks: { where: (bookmarks, { eq }) => eq(bookmarks.userId, userId) }
+      } : {}),
     },
     limit: 50,
   });
@@ -46,8 +49,10 @@ export async function getFeedPosts() {
       reposts: post.repostCount || 0,
       likes: post.likeCount || 0,
       views: 0, // Placeholder
+      bookmarks: post.bookmarkCount || 0,
     },
     hasLiked: post.likes ? post.likes.length > 0 : false,
+    hasBookmarked: (post as any).bookmarks ? (post as any).bookmarks.length > 0 : false,
   }));
 }
 
@@ -77,7 +82,10 @@ export async function getInfiniteFeedPostsAction({
     with: {
       author: true,
       media: true,
-      ...(userId ? { likes: { where: (likes, { eq }) => eq(likes.userId, userId) } } : {}),
+      ...(userId ? { 
+        likes: { where: (likes, { eq }) => eq(likes.userId, userId) },
+        bookmarks: { where: (bookmarks, { eq }) => eq(bookmarks.userId, userId) }
+      } : {}),
     },
     limit: limit + 1, // Fetch one extra to check if there is a next page
   });
@@ -117,8 +125,10 @@ export async function getInfiniteFeedPostsAction({
       reposts: post.repostCount || 0,
       likes: post.likeCount || 0,
       views: 0,
+      bookmarks: post.bookmarkCount || 0,
     },
     hasLiked: post.likes ? post.likes.length > 0 : false,
+    hasBookmarked: (post as any).bookmarks ? (post as any).bookmarks.length > 0 : false,
   }));
 
   return {
@@ -277,8 +287,9 @@ export async function getPostById(postId: string) {
       publicId: m.publicId,
       thumbnailUrl: m.thumbnailUrl,
     })),
-    stats: { replies: post.commentCount || 0, reposts: post.repostCount || 0, likes: post.likeCount || 0, views: 0 },
-    hasLiked: false, // Since this is mostly used for the created post itself or by id, hasLiked logic can be added later if needed
+    stats: { replies: post.commentCount || 0, reposts: post.repostCount || 0, likes: post.likeCount || 0, views: 0, bookmarks: post.bookmarkCount || 0 },
+    hasLiked: false, 
+    hasBookmarked: false,
   };
 }
 
@@ -318,7 +329,10 @@ export async function searchPostsAction(query: string, limit: number = 5) {
     with: {
       author: true,
       media: true,
-      ...(userId ? { likes: { where: (likes, { eq }) => eq(likes.userId, userId) } } : {}),
+      ...(userId ? { 
+        likes: { where: (likes, { eq }) => eq(likes.userId, userId) },
+        bookmarks: { where: (bookmarks, { eq }) => eq(bookmarks.userId, userId) }
+      } : {}),
     },
     limit: 500, // Reasonable limit for in-memory fuzzy search
   });
@@ -354,7 +368,117 @@ export async function searchPostsAction(query: string, limit: number = 5) {
       reposts: result.item.repostCount || 0,
       likes: result.item.likeCount || 0,
       views: 0,
+      bookmarks: result.item.bookmarkCount || 0,
     },
     hasLiked: result.item.likes ? result.item.likes.length > 0 : false,
+    hasBookmarked: (result.item as any).bookmarks ? (result.item as any).bookmarks.length > 0 : false,
   }));
+}
+
+export async function toggleBookmarkAction(postId: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  
+  const userId = session.user.id;
+  
+  const existingBookmark = await db.query.bookmarks.findFirst({
+    where: and(eq(bookmarks.postId, postId), eq(bookmarks.userId, userId))
+  });
+
+  if (existingBookmark) {
+    await db.delete(bookmarks).where(and(eq(bookmarks.postId, postId), eq(bookmarks.userId, userId)));
+    await db.update(posts).set({ bookmarkCount: sql`bookmark_count - 1` }).where(eq(posts.id, postId));
+    return { bookmarked: false };
+  } else {
+    await db.insert(bookmarks).values({ id: crypto.randomUUID(), postId, userId });
+    await db.update(posts).set({ bookmarkCount: sql`bookmark_count + 1` }).where(eq(posts.id, postId));
+    return { bookmarked: true };
+  }
+}
+
+export async function getInfiniteBookmarkedPostsAction({
+  cursor,
+  limit = 10,
+}: {
+  cursor?: { createdAt: Date; id: string } | null;
+  limit?: number;
+}) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) throw new Error("Unauthorized");
+
+  // We need to fetch bookmarks, and then the posts they point to.
+  // Using a join is better here.
+  const allBookmarks = await db.query.bookmarks.findMany({
+    where: cursor
+      ? or(
+          sql`${bookmarks.createdAt} < ${cursor.createdAt}`,
+          and(
+            eq(bookmarks.createdAt, cursor.createdAt),
+            sql`${bookmarks.id} < ${cursor.id}`
+          )
+        )
+      : eq(bookmarks.userId, userId),
+    orderBy: [desc(bookmarks.createdAt), desc(bookmarks.id)],
+    with: {
+      post: {
+        with: {
+          author: true,
+          media: true,
+          likes: { where: (likes, { eq }) => eq(likes.userId, userId) },
+          bookmarks: { where: (bms, { eq }) => eq(bms.userId, userId) }
+        }
+      }
+    },
+    limit: limit + 1, // Fetch one extra to check if there is a next page
+  });
+
+  let nextCursor: typeof cursor = null;
+  if (allBookmarks.length > limit) {
+    const nextItem = allBookmarks.pop(); // Remove the extra item
+    if (nextItem) {
+      nextCursor = {
+        createdAt: nextItem.createdAt!,
+        id: nextItem.id,
+      };
+    }
+  }
+
+  const formattedPosts = allBookmarks.map(bm => {
+    const post = bm.post;
+    return {
+      id: post.id,
+      content: post.content,
+      createdAt: post.createdAt,
+      author: {
+        id: post.author.id,
+        name: post.author.name,
+        username: post.author.username,
+        image: post.author.image,
+        isVerified: post.author.isVerified,
+        role: post.author.role,
+      },
+      media: post.media.map(m => ({
+        id: m.id,
+        type: m.type,
+        url: m.url,
+        publicId: m.publicId,
+        thumbnailUrl: m.thumbnailUrl,
+      })),
+      stats: {
+        replies: post.commentCount || 0,
+        reposts: post.repostCount || 0,
+        likes: post.likeCount || 0,
+        views: 0,
+        bookmarks: post.bookmarkCount || 0,
+      },
+      hasLiked: post.likes ? post.likes.length > 0 : false,
+      hasBookmarked: post.bookmarks ? post.bookmarks.length > 0 : false,
+    };
+  });
+
+  return {
+    posts: formattedPosts,
+    nextCursor,
+  };
 }
