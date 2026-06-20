@@ -3,6 +3,7 @@ import { getPostById } from "@/actions/post.actions";
 import { PostCard } from "@/components/feed/PostCard";
 import { CommentFeed } from "@/components/comment/CommentFeed";
 import { BackButton } from "./BackButton";
+import { ScrollToTop } from "@/components/ui/ScrollToTop";
 
 interface PostPageProps {
   params: Promise<{
@@ -26,6 +27,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
   return (
     <div className="flex justify-center w-full min-h-screen bg-background text-foreground">
+      <ScrollToTop />
       <main className="flex w-full max-w-2xl flex-col border-x min-h-screen">
         <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b px-4 py-3 font-semibold flex items-center gap-6">
           <BackButton />

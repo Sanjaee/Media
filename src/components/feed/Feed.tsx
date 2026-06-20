@@ -23,8 +23,9 @@ export function Feed({ initialData }: { initialData: { posts: PostWithRelations[
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialData: {
       pages: [initialData],
-      pageParams: [null],
+      pageParams: [1],
     },
+    staleTime: Infinity, // Prevent background refetch on back navigation
   });
 
   const allPosts = data ? data.pages.flatMap((page) => page.posts) : initialData.posts;
