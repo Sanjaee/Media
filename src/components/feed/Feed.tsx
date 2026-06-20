@@ -1,26 +1,100 @@
 "use client";
 
-import { useRef } from "react";
-import { PostWithRelations, usePostStore } from "@/store/usePostStore";
+import { useEffect, useRef } from "react";
+import { PostWithRelations } from "@/store/usePostStore";
 import { PostCard } from "./PostCard";
-import { CreatePost } from "./CreatePost";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { getInfiniteFeedPostsAction } from "@/actions/post.actions";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 
-export function Feed({ initialPosts }: { initialPosts: PostWithRelations[] }) {
-  const initialized = useRef(false);
-  const setPosts = usePostStore(state => state.setPosts);
-  const posts = usePostStore(state => state.posts);
+export function Feed({ initialData }: { initialData: { posts: PostWithRelations[], nextCursor: { createdAt: Date, id: string } | null } }) {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['feed'],
+    queryFn: async ({ pageParam }) => {
+      return getInfiniteFeedPostsAction({ cursor: pageParam as any, limit: 10 });
+    },
+    initialPageParam: null as { createdAt: Date, id: string } | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    initialData: {
+      pages: [initialData],
+      pageParams: [null],
+    },
+  });
 
-  // Initialize Zustand store on the first render
-  if (!initialized.current) {
-    setPosts(initialPosts);
-    initialized.current = true;
-  }
+  const allPosts = data ? data.pages.flatMap((page) => page.posts) : initialData.posts;
+
+  const virtualizer = useWindowVirtualizer({
+    count: hasNextPage ? allPosts.length + 1 : allPosts.length,
+    estimateSize: () => 300, // estimated height of a post card
+    overscan: 5,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+
+  useEffect(() => {
+    const [lastItem] = [...virtualItems].reverse();
+
+    if (!lastItem) {
+      return;
+    }
+
+    if (
+      lastItem.index >= allPosts.length - 1 &&
+      hasNextPage &&
+      !isFetchingNextPage
+    ) {
+      fetchNextPage();
+    }
+  }, [
+    hasNextPage,
+    fetchNextPage,
+    allPosts.length,
+    isFetchingNextPage,
+    virtualItems,
+  ]);
 
   return (
-    <div className="flex flex-col pb-20">
-      {posts.map((post) => (
-        <PostCard key={post.id} post={post} />
-      ))}
+    <div className="flex flex-col pb-20 w-full relative">
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        {virtualItems.map((virtualItem) => {
+          const isLoaderRow = virtualItem.index > allPosts.length - 1;
+          const post = allPosts[virtualItem.index];
+
+          return (
+            <div
+              key={virtualItem.key}
+              data-index={virtualItem.index}
+              ref={virtualizer.measureElement}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+            >
+              {isLoaderRow ? (
+                <div className="flex justify-center p-4 text-muted-foreground">
+                  Memuat post...
+                </div>
+              ) : (
+                <PostCard post={post} />
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { posts, media, users, likes, comments } from "@/db/schema";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc, sql, and, or } from "drizzle-orm";
 import { auth } from "@/auth";
 import { createPostSchema, CreatePostInput } from "@/lib/validations/post";
 import cloudinary from "@/lib/cloudinary";
@@ -48,6 +48,81 @@ export async function getFeedPosts() {
     },
     hasLiked: post.likes ? post.likes.length > 0 : false,
   }));
+}
+
+export async function getInfiniteFeedPostsAction({
+  cursor,
+  limit = 10,
+}: {
+  cursor?: { createdAt: Date; id: string } | null;
+  limit?: number;
+}) {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  const whereClause = cursor
+    ? or(
+        sql`${posts.createdAt} < ${cursor.createdAt}`,
+        and(
+          eq(posts.createdAt, cursor.createdAt),
+          sql`${posts.id} < ${cursor.id}`
+        )
+      )
+    : undefined;
+
+  const allPosts = await db.query.posts.findMany({
+    where: whereClause,
+    orderBy: [desc(posts.createdAt), desc(posts.id)],
+    with: {
+      author: true,
+      media: true,
+      ...(userId ? { likes: { where: (likes, { eq }) => eq(likes.userId, userId) } } : {}),
+    },
+    limit: limit + 1, // Fetch one extra to check if there is a next page
+  });
+
+  let nextCursor: typeof cursor = null;
+  if (allPosts.length > limit) {
+    const nextItem = allPosts.pop(); // Remove the extra item
+    if (nextItem) {
+      nextCursor = {
+        createdAt: nextItem.createdAt!,
+        id: nextItem.id,
+      };
+    }
+  }
+
+  const formattedPosts = allPosts.map(post => ({
+    id: post.id,
+    content: post.content,
+    createdAt: post.createdAt,
+    author: {
+      id: post.author.id,
+      name: post.author.name,
+      username: post.author.username,
+      image: post.author.image,
+      isVerified: post.author.isVerified,
+      role: post.author.role,
+    },
+    media: post.media.map(m => ({
+      id: m.id,
+      type: m.type,
+      url: m.url,
+      publicId: m.publicId,
+    })),
+    stats: {
+      replies: post.commentCount || 0,
+      reposts: post.repostCount || 0,
+      likes: post.likeCount || 0,
+      views: 0,
+    },
+    hasLiked: post.likes ? post.likes.length > 0 : false,
+  }));
+
+  return {
+    posts: formattedPosts,
+    nextCursor,
+  };
 }
 
 export async function createPostAction(input: CreatePostInput) {
