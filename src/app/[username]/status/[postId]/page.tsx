@@ -34,7 +34,7 @@ export default async function PostPage({ params }: PostPageProps) {
           Post
         </header>
 
-        <PostCard post={post as any} />
+        <PostCard post={post as any} priority={true} />
         <CommentFeed postId={post.id} />
       </main>
     </div>

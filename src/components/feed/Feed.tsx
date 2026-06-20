@@ -89,7 +89,7 @@ export function Feed({ initialData }: { initialData: { posts: PostWithRelations[
               {isLoaderRow ? (
                 <PostSkeleton />
               ) : (
-                <PostCard post={post} />
+                <PostCard post={post} priority={virtualItem.index === 0} />
               )}
             </div>
           );

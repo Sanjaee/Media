@@ -42,7 +42,7 @@ import { CommentFeed } from "@/components/comment/CommentFeed";
 import { UserNameWithRole } from "@/components/ui/UserNameWithRole";
 import { toast } from "sonner";
 
-export function PostCard({ post: initialPost }: { post: PostWithRelations }) {
+export function PostCard({ post: initialPost, priority = false }: { post: PostWithRelations, priority?: boolean }) {
   const router = useRouter();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
@@ -283,14 +283,17 @@ export function PostCard({ post: initialPost }: { post: PostWithRelations }) {
                       width={media.width || 1200}
                       height={media.height || 800}
                       className="max-w-full w-auto h-auto max-h-[80vh] object-contain"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 800px"
+                      priority={priority}
                     />
                   ) : (
                     <Image 
                       src={getCloudinaryUrl(media.url, "f_auto,q_auto,w_800,c_limit")} 
                       alt="Post media" 
                       fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 30vw, 400px"
                       className="object-cover"
+                      priority={priority}
                     />
                   )}
                 </div>
