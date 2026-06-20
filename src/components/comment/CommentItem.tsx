@@ -91,7 +91,7 @@ export function CommentItem({ comment, postId, isReply = false, level = 0, autoE
             </Avatar>
           </Link>
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex flex-col">
             <div className="flex items-center gap-1">
@@ -113,14 +113,14 @@ export function CommentItem({ comment, postId, isReply = false, level = 0, autoE
           </div>
 
           <div className="flex items-center gap-6 mt-1 text-muted-foreground">
-            <button 
+            <button
               onClick={() => setIsReplying(!isReplying)}
               className="flex items-center gap-1 text-[12px] hover:text-blue-500 transition-colors group/btn"
             >
               <div className="p-1 rounded-full group-hover/btn:bg-blue-500/10"><MessageCircle size={iconSize} /></div>
               <span>{comment.replyCount > 0 ? comment.replyCount : "Reply"}</span>
             </button>
-            
+
             <button className="flex items-center gap-1.5 text-[12px] hover:text-pink-500 transition-colors group/btn">
               <div className="p-1 rounded-full group-hover/btn:bg-pink-500/10"><Heart size={iconSize} /></div>
               <span>{comment.likeCount > 0 ? comment.likeCount : ""}</span>
@@ -129,20 +129,20 @@ export function CommentItem({ comment, postId, isReply = false, level = 0, autoE
 
           {isReplying && (
             <div className="mt-3">
-              <CommentForm 
-                postId={postId} 
-                parentCommentId={comment.id} 
+              <CommentForm
+                postId={postId}
+                parentCommentId={comment.id}
                 onSuccess={() => {
                   setIsReplying(false);
                   setShowReplies(true);
                 }}
-                autoFocus 
+                autoFocus
               />
             </div>
           )}
 
           {comment.replyCount > 0 && !showReplies && (
-            <button 
+            <button
               onClick={() => setShowReplies(true)}
               className="mt-1 text-xs text-blue-500 hover:underline font-medium flex items-center gap-2"
             >
@@ -158,9 +158,9 @@ export function CommentItem({ comment, postId, isReply = false, level = 0, autoE
           {level === 0 && (
             <div className="absolute left-[36px] top-0 bottom-2 w-px bg-border" />
           )}
-          
+
           {isLoadingReplies && <div className="text-xs text-muted-foreground py-2">Loading replies...</div>}
-          
+
           <div className="flex flex-col w-full">
             {replies.map((reply) => (
               <div key={reply.id} className="relative w-full">
@@ -170,12 +170,12 @@ export function CommentItem({ comment, postId, isReply = false, level = 0, autoE
               </div>
             ))}
           </div>
-          
+
           {hasNextPage && (
-            <div className="relative mt-1 mb-2">
-              <div className="absolute left-[-16px] top-[-8px] w-[16px] h-[18px] border-l border-b border-border rounded-bl-xl" />
-              <button 
-                onClick={() => fetchNextPage()} 
+            <div className={`relative mt-1 mb-2 ${level > 0 ? "ml-[32px]" : ""}`}>
+              <div className={`absolute ${level > 0 ? "left-[-48px] w-[48px]" : "left-[-16px] w-[16px]"} top-[-8px] h-[18px] border-l border-b border-border rounded-bl-xl`} />
+              <button
+                onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
                 className="text-xs text-blue-500 hover:underline font-medium text-left"
               >
@@ -183,11 +183,11 @@ export function CommentItem({ comment, postId, isReply = false, level = 0, autoE
               </button>
             </div>
           )}
-          
-          {replies.length > 0 && (
+
+          {replies.length > 0 && level === 0 && (
             <div className="relative mt-1 mb-2">
               <div className="absolute left-[-16px] top-[-8px] w-[16px] h-[18px] border-l border-b border-border rounded-bl-xl" />
-              <button 
+              <button
                 onClick={() => setShowReplies(false)}
                 className="text-xs text-muted-foreground hover:underline"
               >
@@ -199,7 +199,7 @@ export function CommentItem({ comment, postId, isReply = false, level = 0, autoE
       )}
 
       {isOwner && (
-        <button 
+        <button
           onClick={() => setShowDeleteAlert(true)}
           disabled={isDeleting}
           className="absolute top-3 right-4 p-2 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-red-500 rounded-full hover:bg-red-500/10 transition-all"
@@ -218,7 +218,7 @@ export function CommentItem({ comment, postId, isReply = false, level = 0, autoE
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
                 deleteComment(comment.id);
