@@ -29,7 +29,7 @@ export function CommentFeed({ postId }: CommentFeedProps) {
 
   return (
     <div className="w-full pb-20">
-      <div className="border-b-8 border-muted"></div>
+      <div className="border-b-1 border-muted"></div>
       
       <div className="py-2 px-4 font-bold text-xl border-b">
         Comments

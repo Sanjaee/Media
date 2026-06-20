@@ -25,13 +25,16 @@ import { UserNameWithRole } from "@/components/ui/UserNameWithRole";
 interface CommentItemProps {
   comment: any; // We'll type this properly later, or keep it generic
   postId: string;
+  isReply?: boolean;
+  level?: number;
+  autoExpand?: boolean;
 }
 
-export function CommentItem({ comment, postId }: CommentItemProps) {
+export function CommentItem({ comment, postId, isReply = false, level = 0, autoExpand = false }: CommentItemProps) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [isReplying, setIsReplying] = useState(false);
-  const [showReplies, setShowReplies] = useState(false);
+  const [showReplies, setShowReplies] = useState(autoExpand);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
   const isOwner = session?.user?.id === comment.author.id;
@@ -69,97 +72,131 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
 
   const replies = repliesData?.pages.flatMap(page => page.replies) || [];
 
+  const avatarClass = isReply ? "w-6 h-6" : "w-10 h-10";
+  const nameClass = isReply ? "text-xs" : "text-sm";
+  const textClass = isReply ? "text-[13px]" : "text-[15px]";
+  const timeClass = isReply ? "text-[10px]" : "text-xs";
+  const iconSize = isReply ? 14 : 16;
+  const paddingClass = isReply ? "py-1.5" : "px-4 py-3";
+
   return (
-    <div className="flex gap-3 px-4 py-3  hover:bg-muted/30 transition-colors relative group">
-      <Link href={`/${comment.author.username}`} className="shrink-0">
-        <Avatar className="w-10 h-10">
-          <AvatarImage src={comment.author.image ?? ""} alt={comment.author.name ?? ""} />
-          <AvatarFallback>{comment.author.name?.charAt(0)}</AvatarFallback>
-        </Avatar>
-      </Link>
-      
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-1 text-sm">
-            <Link href={`/${comment.author.username}`} className="min-w-0 max-w-[150px] sm:max-w-[200px]">
-              <UserNameWithRole displayName={comment.author.name || ""} role={comment.author.role} className="mb-0 text-sm" />
-            </Link>
-            <span className="text-muted-foreground">·</span>
-            <span className="text-muted-foreground text-xs">
-              {comment.createdAt ? formatShortTime(comment.createdAt) : ""}
-            </span>
-          </div>
-          <Link href={`/${comment.author.username}`} className="text-muted-foreground truncate text-[13px]">
-            @{comment.author.username}
+    <div className={`flex flex-col w-full relative group transition-colors ${level === 0 ? "hover:bg-muted/30" : ""}`}>
+      {/* Row for avatar and content */}
+      <div className={`flex gap-2 w-full ${paddingClass}`}>
+        <div className="flex flex-col items-center">
+          <Link href={`/${comment.author.username}`} className="shrink-0 relative z-10">
+            <Avatar className={avatarClass}>
+              <AvatarImage src={comment.author.image ?? ""} alt={comment.author.name ?? ""} />
+              <AvatarFallback>{comment.author.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
           </Link>
         </div>
-
-        <div className="mt-1 text-[15px] whitespace-pre-wrap break-words pr-8">
-          {comment.content}
-        </div>
-
-        <div className="flex items-center gap-6 mt-2 text-muted-foreground">
-          <button 
-            onClick={() => setIsReplying(!isReplying)}
-            className="flex items-center gap-1 text-[13px] hover:text-blue-500 transition-colors group/btn"
-          >
-            <div className="p-1.5 rounded-full group-hover/btn:bg-blue-500/10"><MessageCircle size={16} /></div>
-            <span>{comment.replyCount > 0 ? comment.replyCount : ""}</span>
-          </button>
-          
-          <button className="flex items-center gap-1.5 text-[13px] hover:text-pink-500 transition-colors group/btn">
-            <div className="p-1.5 rounded-full group-hover/btn:bg-pink-500/10"><Heart size={16} /></div>
-            <span>{comment.likeCount > 0 ? comment.likeCount : ""}</span>
-          </button>
-        </div>
-
-        {isReplying && (
-          <div className="mt-3">
-            <CommentForm 
-              postId={postId} 
-              parentCommentId={comment.id} 
-              onSuccess={() => {
-                setIsReplying(false);
-                setShowReplies(true);
-              }}
-              autoFocus 
-            />
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1">
+              <Link href={`/${comment.author.username}`} className="min-w-0 max-w-[150px] sm:max-w-[200px]">
+                <UserNameWithRole displayName={comment.author.name || ""} role={comment.author.role} className={`mb-0 ${nameClass}`} />
+              </Link>
+              <span className="text-muted-foreground">·</span>
+              <span className={`text-muted-foreground ${timeClass}`}>
+                {comment.createdAt ? formatShortTime(comment.createdAt) : ""}
+              </span>
+            </div>
+            <Link href={`/${comment.author.username}`} className={`text-muted-foreground truncate ${timeClass}`}>
+              @{comment.author.username}
+            </Link>
           </div>
-        )}
 
-        {comment.replyCount > 0 && !showReplies && (
-          <button 
-            onClick={() => setShowReplies(true)}
-            className="mt-2 text-sm text-blue-500 hover:underline font-medium"
-          >
-            Show {comment.replyCount} replies
-          </button>
-        )}
+          <div className={`mt-0.5 whitespace-pre-wrap break-words pr-8 ${textClass}`}>
+            {comment.content}
+          </div>
 
-        {showReplies && (
-          <div className="mt-3 flex flex-col gap-0 border-l-2 pl-4 ml-2 border-muted">
-            {isLoadingReplies && <div className="text-sm text-muted-foreground py-2">Loading replies...</div>}
-            {replies.map(reply => (
-              <CommentItem key={reply.id} comment={reply} postId={postId} />
+          <div className="flex items-center gap-6 mt-1 text-muted-foreground">
+            <button 
+              onClick={() => setIsReplying(!isReplying)}
+              className="flex items-center gap-1 text-[12px] hover:text-blue-500 transition-colors group/btn"
+            >
+              <div className="p-1 rounded-full group-hover/btn:bg-blue-500/10"><MessageCircle size={iconSize} /></div>
+              <span>{comment.replyCount > 0 ? comment.replyCount : "Reply"}</span>
+            </button>
+            
+            <button className="flex items-center gap-1.5 text-[12px] hover:text-pink-500 transition-colors group/btn">
+              <div className="p-1 rounded-full group-hover/btn:bg-pink-500/10"><Heart size={iconSize} /></div>
+              <span>{comment.likeCount > 0 ? comment.likeCount : ""}</span>
+            </button>
+          </div>
+
+          {isReplying && (
+            <div className="mt-3">
+              <CommentForm 
+                postId={postId} 
+                parentCommentId={comment.id} 
+                onSuccess={() => {
+                  setIsReplying(false);
+                  setShowReplies(true);
+                }}
+                autoFocus 
+              />
+            </div>
+          )}
+
+          {comment.replyCount > 0 && !showReplies && (
+            <button 
+              onClick={() => setShowReplies(true)}
+              className="mt-1 text-xs text-blue-500 hover:underline font-medium flex items-center gap-2"
+            >
+              View {comment.replyCount} replies
+            </button>
+          )}
+        </div>
+      </div>
+
+      {showReplies && (
+        <div className={`flex flex-col relative w-full ${level === 0 ? "pl-[52px]" : ""}`}>
+          {/* Main vertical line ONLY drawn by root comment */}
+          {level === 0 && (
+            <div className="absolute left-[36px] top-0 bottom-2 w-px bg-border" />
+          )}
+          
+          {isLoadingReplies && <div className="text-xs text-muted-foreground py-2">Loading replies...</div>}
+          
+          <div className="flex flex-col w-full">
+            {replies.map((reply) => (
+              <div key={reply.id} className="relative w-full">
+                {/* Curved branch for each reply connecting to the main vertical line */}
+                <div className="absolute left-[-16px] top-0 w-[16px] h-[18px] border-l border-b border-border rounded-bl-xl" />
+                <CommentItem comment={reply} postId={postId} isReply={true} level={level + 1} autoExpand={true} />
+              </div>
             ))}
-            {hasNextPage && (
+          </div>
+          
+          {hasNextPage && (
+            <div className="relative mt-1 mb-2">
+              <div className="absolute left-[-16px] top-[-8px] w-[16px] h-[18px] border-l border-b border-border rounded-bl-xl" />
               <button 
                 onClick={() => fetchNextPage()} 
                 disabled={isFetchingNextPage}
-                className="text-sm text-blue-500 hover:underline font-medium text-left mt-2"
+                className="text-xs text-blue-500 hover:underline font-medium text-left"
               >
-                {isFetchingNextPage ? "Loading..." : "Show more replies"}
+                {isFetchingNextPage ? "Loading..." : "View more replies"}
               </button>
-            )}
-            <button 
-              onClick={() => setShowReplies(false)}
-              className="mt-2 text-sm text-muted-foreground hover:underline"
-            >
-              Hide replies
-            </button>
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+          
+          {replies.length > 0 && (
+            <div className="relative mt-1 mb-2">
+              <div className="absolute left-[-16px] top-[-8px] w-[16px] h-[18px] border-l border-b border-border rounded-bl-xl" />
+              <button 
+                onClick={() => setShowReplies(false)}
+                className="text-xs text-muted-foreground hover:underline"
+              >
+                Hide replies
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {isOwner && (
         <button 
