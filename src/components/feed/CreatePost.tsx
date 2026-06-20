@@ -22,9 +22,27 @@ export function CreatePost({ onSuccess }: { onSuccess?: () => void }) {
 
   if (!session?.user) return null;
 
+  const MAX_VIDEO_SIZE = 20 * 1024 * 1024; // 20MB
+  const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+
+  const validateFile = (file: File) => {
+    if (file.type.startsWith('video/')) {
+      if (file.size > MAX_VIDEO_SIZE) {
+        toast.error(`Video ${file.name} is too large. Max size is 20MB.`);
+        return false;
+      }
+    } else if (file.type.startsWith('image/')) {
+      if (file.size > MAX_IMAGE_SIZE) {
+        toast.error(`Image ${file.name} is too large. Max size is 5MB.`);
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files);
+      const newFiles = Array.from(e.target.files).filter(validateFile);
       setSelectedFiles(prev => [...prev, ...newFiles]);
     }
     e.target.value = "";
@@ -33,7 +51,9 @@ export function CreatePost({ onSuccess }: { onSuccess?: () => void }) {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/") || f.type.startsWith("video/"));
+      const files = Array.from(e.dataTransfer.files)
+        .filter(f => f.type.startsWith("image/") || f.type.startsWith("video/"))
+        .filter(validateFile);
       if (files.length > 0) {
         setSelectedFiles(prev => [...prev, ...files]);
       }
@@ -93,7 +113,7 @@ export function CreatePost({ onSuccess }: { onSuccess?: () => void }) {
       if (onSuccess) onSuccess();
     } catch (e) {
       console.error("Error creating post:", e);
-      toast.error("Failed to create post. Pastikan ukuran file tidak terlalu besar.");
+      toast.error("Failed to create post. Please ensure your files are not too large.");
     } finally {
       setIsSubmitting(false);
     }
@@ -121,17 +141,32 @@ export function CreatePost({ onSuccess }: { onSuccess?: () => void }) {
           />
           
           {selectedFiles.length > 0 && (
-            <div className="grid grid-cols-2 gap-2 mt-2">
+            <div className={`mt-2 ${selectedFiles.length === 1 ? 'flex justify-center w-full' : 'grid grid-cols-2 gap-2'}`}>
               {selectedFiles.map((file, index) => (
-                <div key={index} className="relative aspect-video rounded-xl overflow-hidden bg-muted">
+                <div 
+                  key={index} 
+                  className={`relative rounded-xl overflow-hidden bg-muted ${
+                    selectedFiles.length === 1 
+                      ? 'w-full flex justify-center items-center max-h-[60vh]' 
+                      : 'aspect-video'
+                  }`}
+                >
                   <button onClick={() => removeFile(index)} className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full z-10 hover:bg-black/70">
                     <X size={16} />
                   </button>
-                  <img 
-                    src={URL.createObjectURL(file)} 
-                    alt="Preview" 
-                    className="object-cover w-full h-full" 
-                  />
+                  {file.type.startsWith('video/') ? (
+                    <video
+                      src={URL.createObjectURL(file)}
+                      controls
+                      className={`bg-black ${selectedFiles.length === 1 ? 'w-full max-h-[60vh] object-contain' : 'w-full h-full object-cover'}`}
+                    />
+                  ) : (
+                    <img 
+                      src={URL.createObjectURL(file)} 
+                      alt="Preview" 
+                      className={`bg-black ${selectedFiles.length === 1 ? 'w-full max-h-[60vh] object-contain' : 'w-full h-full object-cover'}`}
+                    />
+                  )}
                 </div>
               ))}
             </div>

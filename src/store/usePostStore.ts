@@ -19,6 +19,7 @@ export interface PostWithRelations {
     publicId: string | null;
     width?: number | null;
     height?: number | null;
+    thumbnailUrl?: string | null;
   }[];
   stats: {
     replies: number;

@@ -39,6 +39,7 @@ export async function getFeedPosts() {
       type: m.type,
       url: m.url,
       publicId: m.publicId,
+      thumbnailUrl: m.thumbnailUrl,
     })),
     stats: {
       replies: post.commentCount || 0,
@@ -109,6 +110,7 @@ export async function getInfiniteFeedPostsAction({
       type: m.type,
       url: m.url,
       publicId: m.publicId,
+      thumbnailUrl: m.thumbnailUrl,
     })),
     stats: {
       replies: post.commentCount || 0,
@@ -142,6 +144,7 @@ export async function createPostAction(input: CreatePostInput) {
       try {
         const uploadResponse = await cloudinary.uploader.upload(base64Str, {
           folder: "media_app_posts",
+          resource_type: "auto",
         });
         
         uploadedMedia.push({
@@ -204,6 +207,7 @@ export async function createPostAction(input: CreatePostInput) {
       type: m.type,
       url: m.url,
       publicId: m.publicId,
+      thumbnailUrl: m.thumbnailUrl,
     })),
     stats: { replies: 0, reposts: 0, likes: 0, views: 0 }
   };
@@ -228,7 +232,9 @@ export async function deletePostAction(postId: string) {
     for (const m of post.media) {
       if (m.publicId) {
         try {
-          await cloudinary.uploader.destroy(m.publicId);
+          await cloudinary.uploader.destroy(m.publicId, {
+            resource_type: m.type === 'video' ? 'video' : 'image'
+          });
         } catch (e) {
           console.error("Failed to delete from Cloudinary:", e);
         }
@@ -269,6 +275,7 @@ export async function getPostById(postId: string) {
       type: m.type,
       url: m.url,
       publicId: m.publicId,
+      thumbnailUrl: m.thumbnailUrl,
     })),
     stats: { replies: post.commentCount || 0, reposts: post.repostCount || 0, likes: post.likeCount || 0, views: 0 },
     hasLiked: false, // Since this is mostly used for the created post itself or by id, hasLiked logic can be added later if needed

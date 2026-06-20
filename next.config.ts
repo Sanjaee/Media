@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
   },
+  serverExternalPackages: ["@neondatabase/serverless"],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "35mb",
+    },
+  },
 };
 
 export default nextConfig;

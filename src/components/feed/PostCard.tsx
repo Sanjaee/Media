@@ -138,7 +138,7 @@ export function PostCard({ post }: { post: PostWithRelations }) {
             <DropdownMenuContent align="end" className="w-48">
               {isOwner ? (
                 <>
-                  <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => toast.info("Fitur edit akan segera hadir!")}>
+                  <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => toast.info("Edit feature coming soon!")}>
                     <Edit size={16} />
                     <span>Edit</span>
                   </DropdownMenuItem>
@@ -156,16 +156,16 @@ export function PostCard({ post }: { post: PostWithRelations }) {
                 </>
               ) : (
                 <>
-                  <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => toast.info("Fitur Add Friend akan segera hadir!")}>
+                  <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => toast.info("Add Friend feature coming soon!")}>
                     <UserPlus size={16} />
                     <span>Add Friend</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-pointer text-yellow-600 focus:text-yellow-600 focus:bg-yellow-500/10 gap-2" onClick={() => toast.info("Fitur Block akan segera hadir!")}>
+                  <DropdownMenuItem className="cursor-pointer text-yellow-600 focus:text-yellow-600 focus:bg-yellow-500/10 gap-2" onClick={() => toast.info("Block feature coming soon!")}>
                     <Ban size={16} />
                     <span>Block @{post.author.username}</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10 gap-2" onClick={() => toast.info("Fitur Report akan segera hadir!")}>
+                  <DropdownMenuItem className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10 gap-2" onClick={() => toast.info("Report feature coming soon!")}>
                     <Flag size={16} />
                     <span>Report</span>
                   </DropdownMenuItem>
@@ -185,24 +185,28 @@ export function PostCard({ post }: { post: PostWithRelations }) {
 
         {/* Media */}
         {post.media && post.media.length > 0 && (
-          <div className={`mt-3 rounded-2xl overflow-hidden border bg-muted ${
-            post.media.length === 1 ? 'flex flex-col' : 'grid grid-cols-2 gap-0.5'
+          <div className={`mt-3 rounded-2xl overflow-hidden border ${
+            post.media.length === 1 ? 'flex justify-center bg-black/5 dark:bg-white/5' : 'grid grid-cols-2 gap-0.5 bg-muted'
           }`}>
-            {post.media.map((media) => (
-              <Link 
-                key={media.id} 
-                href={`/${post.author.username || 'user'}/status/${post.id}/photo/${media.id}`}
-                scroll={false}
-                className="block relative"
-              >
-                <div className={`relative w-full ${post.media.length > 1 ? 'aspect-square sm:aspect-[4/3]' : ''}`}>
-                  {post.media.length === 1 ? (
+            {post.media.map((media) => {
+              const isVideo = media.type === 'video';
+              const mediaContent = (
+                <div className={`relative flex justify-center items-center w-full ${post.media.length > 1 ? 'aspect-square sm:aspect-[4/3]' : ''}`}>
+                  {isVideo ? (
+                    <video
+                      src={media.url}
+                      controls
+                      playsInline
+                      className={post.media.length === 1 ? 'max-w-full max-h-[80vh] object-contain' : 'w-full h-full absolute inset-0 object-cover bg-black'}
+                      poster={media.thumbnailUrl || undefined}
+                    />
+                  ) : post.media.length === 1 ? (
                     <Image 
                       src={getCloudinaryUrl(media.url, "f_auto,q_auto,w_1200,c_limit")} 
                       alt="Post media" 
                       width={media.width || 1200}
                       height={media.height || 800}
-                      className="w-full h-auto object-cover max-h-[80vh]"
+                      className="max-w-full w-auto h-auto max-h-[80vh] object-contain"
                     />
                   ) : (
                     <Image 
@@ -214,8 +218,23 @@ export function PostCard({ post }: { post: PostWithRelations }) {
                     />
                   )}
                 </div>
-              </Link>
-            ))}
+              );
+
+              return isVideo ? (
+                <div key={media.id} className="block relative">
+                  {mediaContent}
+                </div>
+              ) : (
+                <Link 
+                  key={media.id} 
+                  href={`/${post.author.username || 'user'}/status/${post.id}/photo/${media.id}`}
+                  scroll={false}
+                  className="block relative"
+                >
+                  {mediaContent}
+                </Link>
+              );
+            })}
           </div>
         )}
 
