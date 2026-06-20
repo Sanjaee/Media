@@ -8,7 +8,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { getInfiniteFeedPostsAction } from "@/actions/post.actions";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 
-export function Feed({ initialData }: { initialData: { posts: PostWithRelations[], nextCursor: { createdAt: Date, id: string } | null } }) {
+export function Feed({ initialData }: { initialData: { posts: PostWithRelations[], nextCursor: number | null } }) {
   const {
     data,
     fetchNextPage,
@@ -17,9 +17,9 @@ export function Feed({ initialData }: { initialData: { posts: PostWithRelations[
   } = useInfiniteQuery({
     queryKey: ['feed'],
     queryFn: async ({ pageParam }) => {
-      return getInfiniteFeedPostsAction({ cursor: pageParam as any, limit: 10 });
+      return getInfiniteFeedPostsAction({ page: pageParam as number, limit: 10 });
     },
-    initialPageParam: null as { createdAt: Date, id: string } | null,
+    initialPageParam: 1,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialData: {
       pages: [initialData],

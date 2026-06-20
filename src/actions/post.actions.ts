@@ -57,27 +57,19 @@ export async function getFeedPosts() {
 }
 
 export async function getInfiniteFeedPostsAction({
-  cursor,
+  page = 1,
   limit = 10,
 }: {
-  cursor?: { createdAt: Date; id: string } | null;
+  page?: number;
   limit?: number;
 }) {
   const session = await auth();
   const userId = session?.user?.id;
 
-  const whereClause = cursor
-    ? or(
-        sql`${posts.createdAt} < ${cursor.createdAt}`,
-        and(
-          eq(posts.createdAt, cursor.createdAt),
-          sql`${posts.id} < ${cursor.id}`
-        )
-      )
-    : undefined;
+
 
   const allPosts = await db.query.posts.findMany({
-    where: whereClause,
+    offset: (page - 1) * limit,
     orderBy: [desc(posts.createdAt), desc(posts.id)],
     with: {
       author: true,
@@ -90,15 +82,10 @@ export async function getInfiniteFeedPostsAction({
     limit: limit + 1, // Fetch one extra to check if there is a next page
   });
 
-  let nextCursor: typeof cursor = null;
+  let nextCursor: number | null = null;
   if (allPosts.length > limit) {
-    const nextItem = allPosts.pop(); // Remove the extra item
-    if (nextItem) {
-      nextCursor = {
-        createdAt: nextItem.createdAt!,
-        id: nextItem.id,
-      };
-    }
+    allPosts.pop(); // Remove the extra item
+    nextCursor = page + 1;
   }
 
   const formattedPosts = allPosts.map(post => ({
