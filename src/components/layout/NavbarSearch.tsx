@@ -27,7 +27,7 @@ export function NavbarSearch() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (query.trim()) {
-      router.push(`/explore?q=${encodeURIComponent(query)}`)
+      router.push(`/search?q=${encodeURIComponent(query)}`)
       setIsFocused(false)
     }
   }
@@ -71,7 +71,7 @@ export function NavbarSearch() {
                     onClick={() => { 
                       const contentStr = result.content || "";
                       setQuery(contentStr.substring(0, 50)); 
-                      router.push(`/explore?q=${encodeURIComponent(contentStr)}`);
+                      router.push(`/search?q=${encodeURIComponent(contentStr)}`);
                     }}
                   >
                     <Search className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />

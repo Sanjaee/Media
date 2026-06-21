@@ -4,7 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Bookmark, Share, Trash2, MoreHorizontal, Edit, UserPlus, Ban, Flag, ThumbsUp, Copy } from "lucide-react";
+import { MessageCircle, Bookmark, Share, Trash2, MoreHorizontal, Edit, UserPlus, Ban, Flag, ThumbsUp, Copy, BarChart2 } from "lucide-react";
+import { useInView } from "react-intersection-observer";
 import { PostWithRelations, usePostStore } from "@/store/usePostStore";
 import {
   DropdownMenu,
@@ -36,7 +37,7 @@ import { Button } from "@/components/ui/button";
 import { getCloudinaryUrl } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { deletePostAction, toggleLikeAction, toggleBookmarkAction } from "@/actions/post.actions";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CommentForm } from "@/components/comment/CommentForm";
 import { CommentFeed } from "@/components/comment/CommentFeed";
 import { UserNameWithRole } from "@/components/ui/UserNameWithRole";
@@ -59,6 +60,25 @@ export function PostCard({ post: initialPost, priority = false }: { post: PostWi
 
   const [isBookmarked, setIsBookmarked] = useState(post.hasBookmarked ?? false);
   const [isBookmarking, setIsBookmarking] = useState(false);
+
+  const { ref, inView } = useInView({
+    threshold: 0.5,
+    triggerOnce: true,
+  });
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (inView && session?.user && session.user.id !== post.author.id) {
+      timeout = setTimeout(() => {
+        fetch('/api/posts/view', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postId: post.id })
+        }).catch(console.error);
+      }, 3000);
+    }
+    return () => clearTimeout(timeout);
+  }, [inView, session?.user, post.id, post.author.id]);
 
   const handleLike = async () => {
     if (!session?.user) {
@@ -167,6 +187,7 @@ export function PostCard({ post: initialPost, priority = false }: { post: PostWi
 
   return (
     <article 
+      ref={ref}
       onClick={handleArticleClick}
       className="border-b px-4 py-3 hover:bg-muted/30 transition-colors flex flex-col relative cursor-pointer"
     >
@@ -348,6 +369,11 @@ export function PostCard({ post: initialPost, priority = false }: { post: PostWi
             />
             <span className={isBookmarked ? "text-primary" : ""}>Bookmark</span>
           </button>
+
+          <div className="flex-1 flex justify-center items-center gap-2 py-1.5 text-[13px] font-medium cursor-default">
+            <BarChart2 size={18} />
+            <span>{post.stats?.views || 0}</span>
+          </div>
 
           <button 
             onClick={handleShare}

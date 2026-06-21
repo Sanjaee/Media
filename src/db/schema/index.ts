@@ -69,6 +69,7 @@ export const posts = pgTable("posts", {
   commentCount: integer("comment_count").default(0),
   repostCount: integer("repost_count").default(0),
   bookmarkCount: integer("bookmark_count").default(0),
+  viewCount: integer("view_count").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -158,6 +159,15 @@ export const adSlots = pgTable("ad_slots", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const postViews = pgTable("post_views", {
+  id: varchar("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  postId: varchar("post_id").notNull().references(() => posts.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("post_views_post_id_user_id_idx").on(table.postId, table.userId),
+]);
+
 export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
   comments: many(comments),
@@ -167,6 +177,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   following: many(follows, { relationName: "follower" }),
   transactions: many(transactions),
   adSlots: many(adSlots),
+  postViews: many(postViews),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
@@ -178,6 +189,7 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   comments: many(comments),
   likes: many(likes),
   bookmarks: many(bookmarks),
+  views: many(postViews),
 }));
 
 export const mediaRelations = relations(media, ({ one }) => ({
@@ -241,6 +253,17 @@ export const bookmarksRelations = relations(bookmarks, ({ one }) => ({
   }),
   post: one(posts, {
     fields: [bookmarks.postId],
+    references: [posts.id],
+  }),
+}));
+
+export const postViewsRelations = relations(postViews, ({ one }) => ({
+  user: one(users, {
+    fields: [postViews.userId],
+    references: [users.id],
+  }),
+  post: one(posts, {
+    fields: [postViews.postId],
     references: [posts.id],
   }),
 }));

@@ -12,7 +12,7 @@ export async function LeftSidebar() {
           <Home className="w-6 h-6" />
           <span className="text-xl hidden xl:block">Home</span>
         </Link>
-        <Link href="/explore" className="flex items-center gap-4 p-3 w-fit rounded-full hover:bg-accent transition">
+        <Link href="/trending" className="flex items-center gap-4 p-3 w-fit rounded-full hover:bg-accent transition">
           <TrendingUp className="w-6 h-6" />
           <span className="text-xl hidden xl:block">Trending</span>
         </Link>
