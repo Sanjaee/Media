@@ -168,6 +168,32 @@ export const postViews = pgTable("post_views", {
   uniqueIndex("post_views_post_id_user_id_idx").on(table.postId, table.userId),
 ]);
 
+export const news = pgTable("news", {
+  id: varchar("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  customUsername: varchar("custom_username").notNull(),
+  customRole: varchar("custom_role"),
+  content: text("content"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const newsMedia = pgTable("news_media", {
+  id: varchar("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  newsId: varchar("news_id").notNull().references(() => news.id, { onDelete: "cascade" }),
+  type: varchar("type").notNull(),
+  url: text("url").notNull(),
+  publicId: varchar("public_id"),
+  thumbnailUrl: text("thumbnail_url"),
+  altText: text("alt_text"),
+  width: integer("width"),
+  height: integer("height"),
+  duration: integer("duration"),
+  bytes: integer("bytes"),
+  format: varchar("format"),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
   comments: many(comments),
@@ -265,5 +291,16 @@ export const postViewsRelations = relations(postViews, ({ one }) => ({
   post: one(posts, {
     fields: [postViews.postId],
     references: [posts.id],
+  }),
+}));
+
+export const newsRelations = relations(news, ({ many }) => ({
+  media: many(newsMedia),
+}));
+
+export const newsMediaRelations = relations(newsMedia, ({ one }) => ({
+  news: one(news, {
+    fields: [newsMedia.newsId],
+    references: [news.id],
   }),
 }));
